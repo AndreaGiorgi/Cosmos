@@ -72,6 +72,7 @@ def create_sector_folder(sector):
             print("Starting folder removed for memory management. ")
         except OSError as e:
             print("Can't remove {dir}: {err}".format(dir=data_path, err=e)) 
+            
 @track
 def search_lightcurve(tic, sector):
     sector_base_path = 'ingested_data\\'
@@ -104,6 +105,3 @@ def search_lightcurve_online(tic, sector):
         print("Mast not online")
         
     return lightcurve
-
-if __name__ == '__main__':
-    create_sector_folder(2)

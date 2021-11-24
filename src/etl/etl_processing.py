@@ -12,12 +12,10 @@ class SparseLightCurveError(Exception):
     """Indicates light curve with too few points in chosen time range."""
     pass
 
-
 def _set_float_feature(ex, name, value):
   """Sets the value of a float feature in a tensorflow.train.Example proto."""
   assert name not in ex.features.feature, "Duplicate feature: %s" % name
   ex.features.feature[name].float_list.value.extend([float(v) for v in value])
-
 
 def _set_bytes_feature(ex, name, value):
   """Sets the value of a bytes feature in a tensorflow.train.Example proto."""
@@ -48,16 +46,14 @@ def process_lightcurve(tce, only_local_flag):
         local_view = lighcurve_preprocess.local_view(time, flux, tce.Period, tce.Duration)
         if only_local_flag is False:
             global_view = lighcurve_preprocess.global_view(time, flux, tce.Period)
-
     except Exception as e:
         print('Global or Local view generation error: ', e)
         
     example = tf.train.Example() #! output prototype see documentation for this shit
     if only_local_flag is False:
         _set_float_feature(example, "global_view", global_view)
-        
     _set_float_feature(example, "local_view", local_view)
-    # Set other columns.
+
     for col_name, value in tce.items():
         if np.issubdtype(type(value), np.integer):
             _set_int64_feature(example, col_name, [value])
@@ -66,6 +62,6 @@ def process_lightcurve(tce, only_local_flag):
                 _set_float_feature(example, col_name, [float(value)])
             except ValueError:
                 _set_bytes_feature(example, col_name, [value])
-    print(example)
+                
     return example
  

@@ -5,7 +5,6 @@ from coordinator import etl_coordinator
 from lightcurve_util import lightcurve_utilities
 from statsmodels.robust import scale
 
-
 class EmptyLightCurveError(Exception):
     """Indicates light curve with no points in chosen time range."""
     pass
@@ -91,7 +90,6 @@ def lc_processing(lc_time, lc_flux):
         all_time: processed time data
         all_flux: processed flux data
     """
-    
     mad = scale.mad(lc_flux)
     indices = np.where(lc_flux > np.median(lc_flux) - 5*mad)
     lc_flux = lc_flux[indices]
@@ -101,7 +99,6 @@ def lc_processing(lc_time, lc_flux):
     return all_time, all_flux
 
 def load_lightcurve(tic, sector):
-    
     """Load the lightcurve from a single tic identifier and its respective sector
     
     Args:
@@ -124,15 +121,10 @@ def load_lightcurve(tic, sector):
 def phase_fold(time, flux, period, t0):
     
     time = lightcurve_utilities.phase_fold_algorithm(time, period, t0)
-    
+
     # Sort by ascending time
-    
     sorted_element = np.argsort(time)
     time = time[sorted_element]
     flux = flux[sorted_element]
-    
-    return time, flux 
-    
 
-if __name__ == '__main__':
-    load_lightcurve()
+    return time, flux 

@@ -53,9 +53,7 @@ def _process_tce(tce, only_local):
   """
     try:
         processed_tce = None
-        print("Ingresso in Processing Phase")
         processed_tce = etl_coordinator.start_processing_phase(tce, only_local)
-        print("Processed File: OK")
     except (Exception, IOError) as e:
         print("Exception occurred: ", e)
     return processed_tce
@@ -108,12 +106,10 @@ def _process_file_shard(tce_table, file_name, only_local = False):
     with tf.io.TFRecordWriter(file_name) as writer:
         for _, tce in tce_table.iterrows():
             try:
-                print('ok try')
                 tce_to_write = _process_tce(tce, only_local)
             except(IOError, EmptyLightCurveError, SparseLightCurveError):
                 continue
             if tce_to_write is not None:
-                print('ok write')
                 writer.write(tce_to_write.SerializeToString())
 
 @track

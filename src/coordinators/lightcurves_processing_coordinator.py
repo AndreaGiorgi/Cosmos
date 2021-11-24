@@ -34,28 +34,37 @@ def track(func):
 
 class EmptyLightCurveError(Exception):
     """Indicates light curve with no points in chosen time range."""
-    pass
 
 class SparseLightCurveError(Exception):
     """Indicates light curve with too few points in chosen time range."""
 
 def _process_tce(tce, only_local):
-    
-    # Generate the local and global views using a dedicated ETL Module
+    """Processes the light curve for a Kepler TCE and returns an Example proto.
+
+  Args:
+    tce: Row of the input TCE table.
+    only_local: Boolean for switching to AstroNet Implement and Cosmos' one
+
+  Returns:
+    A tensorflow.train.Example proto containing TCE features.
+
+  Raises:
+    IOError or general Exceptionx: If the light curve files for this Kepler ID cannot be found.
+  """
     try:
         processed_tce = None
         print("Ingresso in Processing Phase")
         processed_tce = etl_coordinator.start_processing_phase(tce, only_local)
         print("Processed File: OK")
-    except Exception:
-        print(Exception)
-        pass
+    except (Exception, IOError) as e:
+        print("Exception occurred: ", e)
     return processed_tce
 
 def preprocess_tce(tce_table):
     
     tce_table = tce_table.dropna()
-    tce_table = tce_table.drop_duplicates()
+    tce_table = tce_table.drop(['row_id'])
+    tce_table = tce_table.drop_duplicates(subset=['tic_id'])
     
     tce_table = tce_table[tce_table['Transit_Depth'] > 0]
     tce_table["Duration"] /= 24  # Convert hours to days.
@@ -65,8 +74,10 @@ def preprocess_tce(tce_table):
     
 
 def create_input_list(tce_csv):
-    
-    #* Reads TESS TOIs CSV file
+    """Generate pandas dataframe of TCEs to be made into file shards.
+
+    :return: pandas dataframe containing TCEs. Required columns: TIC, TCE planet number, final disposition
+    """
     ready_tce_table = None
     if type(tce_csv) == list:
         tce_table = pd.DataFrame()
@@ -88,7 +99,12 @@ def create_input_list(tce_csv):
 #*  file_name: The output TFRecord file. 
 #
 def _process_file_shard(tce_table, file_name, only_local):
+    """Processes a single file shard.
 
+  Args:
+    tce_table: A Pandas DateFrame containing the TCEs in the shard.
+    file_name: The output TFRecord file.
+  """
     with tf.io.TFRecordWriter(file_name) as writer:
         for _, tce in tce_table.iterrows():
             try:
@@ -100,14 +116,18 @@ def _process_file_shard(tce_table, file_name, only_local):
 
 @track
 def main_test_set(tce_csv, output_directory, shards, workers, only_local, sector):
-
+    """
+    Make a table of new TCEs into tensorflow.train.Example format for classification purposes. This is useful for
+    creating test sets of TCEs from new sectors that were not used to train the model.
+    :return:
+    """
     # Make the output directory if it doesn't already exist.
     tf.io.gfile.makedirs(output_directory)
     tce_table = create_input_list(tce_csv) 
     num_tces = len(tce_csv)
 
     # Randomly shuffle the TCE table.
-    np.random.seed(123)
+    np.random.seed(4890)
     tce_table = tce_table.iloc[np.random.permutation(num_tces)]
 
     # Further split training TCEs into file shards.
@@ -137,7 +157,11 @@ def main_test_set(tce_csv, output_directory, shards, workers, only_local, sector
         
 @track
 def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_local):
-    
+    """
+    Make a table of new TCEs into tensorflow.train.Example format for classification purposes. This is useful for
+    creating test sets of TCEs from new sectors that were not used to train the model.
+    :return:
+    """
     tf.io.gfile.makedirs(output_directory)
     tce_table = create_input_list(tce_csv) 
     num_transits = len(tce_table)
@@ -158,8 +182,8 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     testing_TCEs = tce_table
     
     print(
-      "Partitioned %d TCEs into training (%d), validation (%d) and test (%d)",
-      num_transits, len(training_TCEs), len(validation_TCEs), len(testing_TCEs))
+      "Partitioned {num} TCEs into training ({train}), validation ({val}) and test ({test})",
+      num = num_transits, train = len(training_TCEs), val = len(validation_TCEs), test = len(testing_TCEs))
     
     ##* Sharding of Datasets
     
@@ -193,3 +217,5 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     
     #for result in async_results:
     #    result.get()
+    
+    #.\super_coordinator.py --tce_csv C:\Users\andre\Desktop\tces.csv --output_directory F:\Cosmos\Cosmos\TFRecords

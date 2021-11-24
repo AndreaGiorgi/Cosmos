@@ -35,7 +35,6 @@ def start_processing_phase(tce, only_local):
 def start_ingestion_phase(tic, sector):
     print("Fits id: " + str(tic) + " tic sector: " + str(sector) + "\n")
     fits_file = etl_ingestion.search_lightcurve(tic, sector)
-    
     return fits_file
 
 @track

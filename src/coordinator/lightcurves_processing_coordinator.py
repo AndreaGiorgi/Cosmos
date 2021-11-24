@@ -63,7 +63,7 @@ def _process_tce(tce, only_local):
 def preprocess_tce(tce_table):
     
     tce_table = tce_table.dropna()
-    tce_table = tce_table.drop(['row_id'])
+    tce_table = tce_table.drop(['row_id'],  axis=1)
     tce_table = tce_table.drop_duplicates(subset=['tic_id'])
     
     tce_table = tce_table[tce_table['Transit_Depth'] > 0]
@@ -98,7 +98,7 @@ def create_input_list(tce_csv):
 #*  tce_table: A Pandas DataFrame containing the TCEs in the shard
 #*  file_name: The output TFRecord file. 
 #
-def _process_file_shard(tce_table, file_name, only_local):
+def _process_file_shard(tce_table, file_name, only_local = False):
     """Processes a single file shard.
 
   Args:
@@ -108,10 +108,12 @@ def _process_file_shard(tce_table, file_name, only_local):
     with tf.io.TFRecordWriter(file_name) as writer:
         for _, tce in tce_table.iterrows():
             try:
+                print('ok try')
                 tce_to_write = _process_tce(tce, only_local)
             except(IOError, EmptyLightCurveError, SparseLightCurveError):
                 continue
             if tce_to_write is not None:
+                print('ok write')
                 writer.write(tce_to_write.SerializeToString())
 
 @track
@@ -179,16 +181,16 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     validation_portion = int(0.90 * num_transits)
     training_TCEs = tce_table[0:train_portion]
     validation_TCEs = tce_table[train_portion:validation_portion]
-    testing_TCEs = tce_table
+    testing_TCEs = tce_table[validation_portion:]
     
     print(
-      "Partitioned {num} TCEs into training ({train}), validation ({val}) and test ({test})",
-      num = num_transits, train = len(training_TCEs), val = len(validation_TCEs), test = len(testing_TCEs))
+      "Partitioned {num} TCEs into training ({train}), validation ({val}) and test ({test})"
+      .format(num = num_transits, train = len(training_TCEs), val = len(validation_TCEs), test = len(testing_TCEs)))
     
     ##* Sharding of Datasets
     
     list_of_shards = [] #! (tce_table_shard, file_name)
-    limits = np.linspace(0, num_transits, shards + 1).astype(np.int) #Return evenly spaced numbers over a specified interval.
+    limits = np.linspace(0, len(training_TCEs), shards + 1).astype(np.int) #Return evenly spaced numbers over a specified interval.
     
     # Create a list of shards appending the training TCE and its number in list of shards. This allows to create right away a batching set.
     for shard in range(shards):
@@ -196,26 +198,27 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
         end = limits[shard + 1]
         list_of_shards.append((training_TCEs[start:end], os.path.join(output_directory, "training_set-%.5d-of-%.5d" % (shard, shards))))
         
+        
     # Test and Validation sets since they represent 20% of all TCEs they are split in only two shards
-    for i in range(1,2):
-    	list_of_shards.append((validation_TCEs, os.path.join(output_directory, "validation_set-%.5d-of-%.5d" % (i, 2))))
-    for i in range(1,2):
-    	list_of_shards.append((testing_TCEs, os.path.join(output_directory, "test_set-%.5d-of-%.5d" % (i, 2))))
+    list_of_shards.append((validation_TCEs, os.path.join(output_directory,
+                                             "val-00000-of-00001")))
+    list_of_shards.append((testing_TCEs, os.path.join(output_directory,
+                                              "test-00000-of-00001")))
      
     num_shards = len(list_of_shards)
-
-    for file_shard in list_of_shards:
-        _process_file_shard(tce_table, file_shard, only_local)
+    print(list_of_shards)
+    #for file_shard in list_of_shards:
+    #    _process_file_shard(file_shard)
     
     # Use multiprocessing. One subprocess for each shard
-    #num_processes = min(num_shards, workers)
-    #pool = multiprocessing.Pool(processes = num_processes)
-    #async_results = [
-    #    pool.apply_async(_process_file_shard, args = (file_shard), kwds={'only_local': only_local})
-    #    for file_shard in list_of_shards] 
-    #pool.close()
+    num_processes = min(num_shards, workers)
+    pool = multiprocessing.Pool(processes = num_processes)
+    async_results = [
+        pool.apply_async(_process_file_shard, args = (file_shard), kwds={'only_local': only_local})
+        for file_shard in list_of_shards] 
+    pool.close()
     
-    #for result in async_results:
-    #    result.get()
+    for result in async_results:
+        result.get()
     
     #.\super_coordinator.py --tce_csv C:\Users\andre\Desktop\tces.csv --output_directory F:\Cosmos\Cosmos\TFRecords

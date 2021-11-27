@@ -82,7 +82,7 @@ def training_pipeline():
         etl_coordinator.etl_ingestion.create_sector_folder(sector = sector)
     lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
                                                                 NAMESPACE.shards, workers, NAMESPACE.only_local)
-    #neural_network_coordinator.init_training_session(args)
+    neural_network_coordinator.init_training_session()
     return
 
 @track
@@ -90,7 +90,7 @@ def evaluation_pipeline():
     workers = multiprocess_params_util()
     lightcurves_processing_coordinator.main_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
                                                                 NAMESPACE.shards, workers, NAMESPACE.only_local, NAMESPACE.sector)
-    #neural_network_coordinator.init_evaluation_session(args)
+    neural_network_coordinator.init_evaluation_session(args)
     return
 
 def main():

@@ -160,6 +160,7 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     creating test sets of TCEs from new sectors that were not used to train the model.
     :return:
     """
+    # Make the output directory if it doesn't already exist.
     tf.io.gfile.makedirs(output_directory)
     tce_table = create_input_list(tce_csv) 
     num_transits = len(tce_table)

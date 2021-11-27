@@ -77,7 +77,7 @@ def multiprocess_params_util():
 @track
 def training_pipeline():
     workers = multiprocess_params_util()
-    for i in range(1,5):
+    for i in range(1,6):
         sector = str(i)
         etl_coordinator.etl_ingestion.create_sector_folder(sector = sector)
     lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 

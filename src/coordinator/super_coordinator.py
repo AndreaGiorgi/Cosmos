@@ -10,7 +10,7 @@ sys.path.append(parentdir)
 
 import psutil, argparse, time
 import lightcurves_processing_coordinator
-from coordinator import etl_coordinator
+from coordinator import etl_coordinator, neural_network_coordinator
 
 def get_process_memory():
     process = psutil.Process(os.getpid())
@@ -90,7 +90,7 @@ def evaluation_pipeline():
     workers = multiprocess_params_util()
     lightcurves_processing_coordinator.main_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
                                                                 NAMESPACE.shards, workers, NAMESPACE.only_local, NAMESPACE.sector)
-    neural_network_coordinator.init_evaluation_session(args)
+    neural_network_coordinator.init_evaluation_session()
     return
 
 def main():

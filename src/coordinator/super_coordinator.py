@@ -88,20 +88,17 @@ def training_pipeline():
     for i in range(1,6):
         sector = str(i)
         etl_coordinator.etl_ingestion.create_sector_folder(sector = sector)
-    if etl_coordinator.start_new_tce_formatting(NAMESPACE.tce_csv, NAMESPACE.astro_tce):
-        lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
-                                                                    NAMESPACE.shards, workers, NAMESPACE.only_local)
-        # TODO neural_network_coordinator.init_training_session()
-    else:
-        print("Cannot open tce")
+    lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, NAMESPACE.shards, workers, NAMESPACE.only_local)
+    # TODO neural_network_coordinator.init_training_session()
     return
 
 @track
 def new_data_pipeline():
     workers = multiprocess_params_util()
-    lightcurves_processing_coordinator.main_new_data_training_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
-                                                                NAMESPACE.shards, workers, NAMESPACE.only_local, NAMESPACE.sector)
-    #TODO neural_network_coordinator.init_evaluation_session()
+    if etl_coordinator.start_new_tce_formatting(NAMESPACE.tce_csv, NAMESPACE.astro_tce):
+        lightcurves_processing_coordinator.main_new_data_training_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
+                                                                    NAMESPACE.shards, workers, NAMESPACE.only_local, NAMESPACE.sector)
+        #TODO neural_network_coordinator.init_training_session()
     return
 
 def main():

@@ -19,6 +19,8 @@ def format_csv(tev_path, astro_path):
     
     astro_tce, astro_columns = load_original_tce(astro_path)
     tev_tce = load_new_tce(tev_path)
+    
+    ## column sectors. IF sectors elems >= 2 THEN keep elems[0] AND insert new value sectors = elem[0]
 
     return True
 

@@ -51,15 +51,15 @@ def create_sector_folder(sector):
         try:
             os.makedirs(sector_base_path, mode=0o666, exist_ok=True)
             data_path = 'F:\\Cosmos\\Cosmos\\data\\sector_' + str(sector)
-            for f in os.scandir(data_path): #! dir = sector_i/s000k
+            for f in os.scandir(data_path): # dir = sector_i/s000k
                 sub_sector = f.path
-                for k in os.scandir(sub_sector): #! dir = sector_i/s000k/
+                for k in os.scandir(sub_sector): # dir = sector_i/s000k/
                     sub_frame = k.path
-                    for j in os.scandir(sub_frame): #! dir = sector_i/s000k/sub_section_j/
+                    for j in os.scandir(sub_frame): # dir = sector_i/s000k/sub_section_j/
                         sub_section = j.path
-                        for z in os.scandir(sub_section): #! dir = sector_i/s000k/sub_section_j/sub_sub_section_z
+                        for z in os.scandir(sub_section): # dir = sector_i/s000k/sub_section_j/sub_sub_section_z
                             sub_sub_section = z.path
-                            for x in os.scandir(sub_sub_section): #! dir = sector_i/s000k/sub_section_j/sub_sub_section_z/stellar_frame
+                            for x in os.scandir(sub_sub_section): # dir = sector_i/s000k/sub_section_j/sub_sub_section_z/stellar_frame
                                 stellar_frame = x.path
                                 for filename in glob(os.path.join(stellar_frame, '*.fits')):
                                     shutil.move(filename, sector_base_path)
@@ -90,18 +90,20 @@ def search_lightcurve(tic, sector):
             
     return fits_filename
 
+#TODO
+#! IMPORTANTE
 def search_lightcurve_online(tic, sector):
     # Usa sector per aprire il settore di riferimento
     # usa tic per avviare una ricerca unificata su tutto la super-directory per trovare il fits
-    # ritorna la tabella astropy di riferimento  invialo al coordinatore. 
+    # ritorna la tabella astropy di riferimento invialo al coordinatore. 
     try:
         obsTable = Observations.query_criteria_async(provenance_name = 'QLP', target_name = int(tic), sequence_number = int(sector))
         try:
             data = Observations.get_product_list_async(obsTable)
             lightcurve = Observations.download_products(data)
-        except FitsNotFoundError:
-             print(str(tic) + " lightcurve not found.")
+        except (FitsNotFoundError, IOError) as e:
+             print(e)
     except AstroqueryNotWorking:
-        print("Mast not online")
+        print("Mast or device not online")
         
     return lightcurve

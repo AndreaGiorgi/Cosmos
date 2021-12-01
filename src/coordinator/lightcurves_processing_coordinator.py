@@ -58,6 +58,26 @@ def _process_tce(tce, only_local):
         print("Exception occurred: ", e)
     return processed_tce
 
+def _process_new_data_tce(tce, only_local):
+    """Processes the light curve for a Kepler TCE and returns an Example proto.
+
+  Args:
+    tce: Row of the input TCE table.
+    only_local: Boolean for switching to AstroNet Implement and Cosmos' one
+
+  Returns:
+    A tensorflow.train.Example proto containing TCE features.
+
+  Raises:
+    IOError or general Exceptionx: If the light curve files for this Kepler ID cannot be found.
+  """
+    try:
+        processed_tce = None
+        processed_tce = etl_coordinator.start_new_data_processing_phase(tce, only_local)
+    except (Exception, IOError) as e:
+        print("Exception occurred: ", e)
+    return processed_tce
+
 def preprocess_tce(tce_table):
     
     tce_table = tce_table.dropna()
@@ -112,8 +132,29 @@ def _process_file_shard(tce_table, file_name, only_local = False):
             if tce_to_write is not None:
                 writer.write(tce_to_write.SerializeToString())
 
+#* Processes a single file shard, writing the processed ones into the output file_name
+#* Args:
+#*  tce_table: A Pandas DataFrame containing the TCEs in the shard
+#*  file_name: The output TFRecord file. 
+#
+def _process_new_data_file_shard(tce_table, file_name, only_local = False):
+    """Processes a single file shard.
+
+  Args:
+    tce_table: A Pandas DateFrame containing the TCEs in the shard.
+    file_name: The output TFRecord file.
+  """
+    with tf.io.TFRecordWriter(file_name) as writer:
+        for _, tce in tce_table.iterrows():
+            try:
+                tce_to_write = _process_new_data_tce(tce, only_local)
+            except(IOError, EmptyLightCurveError, SparseLightCurveError):
+                continue
+            if tce_to_write is not None:
+                writer.write(tce_to_write.SerializeToString())
+
 @track
-def main_test_set(tce_csv, output_directory, shards, workers, only_local, sector):
+def main_new_data_training_set(tce_csv, output_directory, shards, workers, only_local, sector):
     """
     Make a table of new TCEs into tensorflow.train.Example format for classification purposes. This is useful for
     creating test sets of TCEs from new sectors that were not used to train the model.
@@ -135,23 +176,19 @@ def main_test_set(tce_csv, output_directory, shards, workers, only_local, sector
       start = boundaries[i]
       end = boundaries[i + 1]
       list_of_shards.append((tce_table[start:end], os.path.join(
-          output_directory, "test-%.5d-of-%.5d" % (i, shards))))
-
-    for file_shard in list_of_shards:
-        _process_file_shard(file_shard, only_local)
-
-
+          output_directory, "new_train-%.5d-of-%.5d" % (i, shards))))
+      
     # Use multiprocessing. One subprocess for each shard
-    #num_shards = len(list_of_shards)
-    #num_processes = min(num_shards, workers)
-    #pool = multiprocessing.Pool(processes = num_processes)
-    #async_results = [
-    #    pool.apply_async(_process_file_shard, file_shard, only_local, sector)
-    #    for file_shard in list_of_shards] 
-    #pool.close()
+    num_shards = len(list_of_shards)
+    num_processes = min(num_shards, workers)
+    pool = multiprocessing.Pool(processes = num_processes)
+    async_results = [
+        pool.apply_async(_process_new_data_file_shard, file_shard, only_local, sector)
+        for file_shard in list_of_shards] 
+    pool.close()
     
-    #for result in async_results:
-    #    result.get()
+    for result in async_results:
+        result.get()
         
 @track
 def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_local):

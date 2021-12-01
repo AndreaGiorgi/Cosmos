@@ -59,14 +59,13 @@ parser.add_argument(
     help="Generate just lightcurve local view rather than global and local ones?")
 
 parser.add_argument(
-    "--only_test",
+    "--new_train",
     action='store_true',
     default=False,
-    help="Generate just a test set rather than the full train/val/test?")
+    help="Generate additional training set using tev toi-catalog data?")
 
 NAMESPACE, unparsed = parser.parse_known_args()
 
-    
 def multiprocess_params_util():
     avaiable_workers = psutil.cpu_count(logical=True)
     print("Avaiable CPU Cores: ", avaiable_workers)
@@ -80,23 +79,26 @@ def training_pipeline():
     for i in range(1,6):
         sector = str(i)
         etl_coordinator.etl_ingestion.create_sector_folder(sector = sector)
-    lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
-                                                                NAMESPACE.shards, workers, NAMESPACE.only_local)
-    neural_network_coordinator.init_training_session()
+    if etl_coordinator.start_new_tce_formatting(NAMESPACE.tce_csv):
+        lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
+                                                                    NAMESPACE.shards, workers, NAMESPACE.only_local)
+        # TODO neural_network_coordinator.init_training_session()
+    else:
+        print("Cannot open tce")
     return
 
 @track
-def evaluation_pipeline():
+def new_data_pipeline():
     workers = multiprocess_params_util()
-    lightcurves_processing_coordinator.main_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
+    lightcurves_processing_coordinator.main_new_data_training_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
                                                                 NAMESPACE.shards, workers, NAMESPACE.only_local, NAMESPACE.sector)
-    neural_network_coordinator.init_evaluation_session()
+    #TODO neural_network_coordinator.init_evaluation_session()
     return
 
 def main():
-    if NAMESPACE.only_test is False:
+    if NAMESPACE.new_train is False:
         training_pipeline()
-    evaluation_pipeline()
+    new_data_pipeline()
     
 if __name__ == '__main__':
     training_pipeline()

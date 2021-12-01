@@ -41,6 +41,15 @@ parser.add_argument(
     "Epoc (t0).")
 
 parser.add_argument(
+    "--astro_tce",
+    type=str,
+    required=False,
+    help="CSV file containing the TESS TCE table. Must contain "
+    "columns: row_id, tic_id, toi_id, Period, Duration, "
+    "Epoc (t0). Required if tce_csv == tev_tces for new training data augmentation"
+)
+
+parser.add_argument(
     "--output_directory",
     type=str,
     required=True,

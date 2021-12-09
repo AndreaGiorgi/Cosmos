@@ -1,5 +1,6 @@
 import os, time, psutil, shutil
 from glob import glob
+import lightkurve as lk
 from astroquery.mast import Observations
 
 class AstroqueryNotWorking(Exception): 
@@ -76,6 +77,7 @@ def create_sector_folder(sector):
 @track
 def search_lightcurve(tic, sector):
     sector_base_path = 'ingested_data\\'
+    fits_filename = None
     try:
         dir = os.path.join(sector_base_path, 'sector_' + str(sector))
         tic_query_key = str(tic)
@@ -96,14 +98,11 @@ def search_lightcurve_online(tic, sector):
     # Usa sector per aprire il settore di riferimento
     # usa tic per avviare una ricerca unificata su tutto la super-directory per trovare il fits
     # ritorna la tabella astropy di riferimento invialo al coordinatore. 
-    try:
-        obsTable = Observations.query_criteria_async(provenance_name = 'QLP', target_name = int(tic), sequence_number = int(sector))
-        try:
-            data = Observations.get_product_list_async(obsTable)
-            lightcurve = Observations.download_products(data)
-        except (FitsNotFoundError, IOError) as e:
-             print(e)
-    except AstroqueryNotWorking:
-        print("Mast or device not online")
-        
-    return lightcurve
+    
+    search_result = lk.search_lightcurve("TIC" + str(tic), mission = "TESS", sector=sector)
+
+    print(search_result)
+    return True
+
+if __name__ == '__main__':
+    search_lightcurve_online(333674399, 19)

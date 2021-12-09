@@ -89,7 +89,17 @@ def preprocess_tce(tce_table):
     tce_table['Disposition'] = tce_table['Disposition'].replace({'IS': 'J', 'V': 'J'})
     
     return tce_table
+
+def preprocess_new_tce(tce_table):
     
+    tce_table = tce_table.dropna()
+    tce_table = tce_table.drop_duplicates(subset=['tic_id'])
+    
+    tce_table = tce_table[tce_table['Transit_Depth'] > 0]
+    tce_table["Duration"] /= 24  # Convert hours to days.
+    tce_table['Disposition'] = tce_table['Disposition'].replace({'IS': 'J', 'V': 'J'})
+    
+    return tce_table    
 
 def create_input_list(tce_csv):
     """Generate pandas dataframe of TCEs to be made into file shards.
@@ -100,14 +110,15 @@ def create_input_list(tce_csv):
     if type(tce_csv) == list:
         tce_table = pd.DataFrame()
         for input in tce_csv:
-            table = pd.read_csv(input, header=0, usecols=[0,1,2,3,7,8,9,10,11,12,13,18], 
+            table = pd.read_csv(input, header=0, usecols=[0,1,2,6,7,8,9,10,13,14,15], 
+                                #tic, toi, dispo, epoc, period, duration, transit, sectors, camera, ccd, sn
                                 dtype={'Sectors': int,'camera': int,'ccd': int})
             tce_table = pd.concat([tce_table, table])
     else:
-        tce_table = pd.read_csv(tce_csv, header=0, usecols=[0,1,2,3,7,8,9,10,11,12,13,18],
+        tce_table = pd.read_csv(tce_csv, header=0, usecols=[0,1,2,6,7,8,9,10,13,14,15],
                                 dtype={'Sectors': int,'camera': int,'ccd': int})
             
-    ready_tce_table = preprocess_tce(tce_table)                                   
+    ready_tce_table = preprocess_new_tce(tce_table)                                   
     
     return ready_tce_table
 
@@ -131,6 +142,8 @@ def _process_file_shard(tce_table, file_name, only_local = False):
                 continue
             if tce_to_write is not None:
                 writer.write(tce_to_write.SerializeToString())
+                
+
 
 #* Processes a single file shard, writing the processed ones into the output file_name
 #* Args:
@@ -154,7 +167,7 @@ def _process_new_data_file_shard(tce_table, file_name, only_local = False):
                 writer.write(tce_to_write.SerializeToString())
 
 @track
-def main_new_data_training_set(tce_csv, output_directory, shards, workers, only_local, sector):
+def main_new_data_training_set(tce_csv, output_directory, shards, workers, only_local):
     """
     Make a table of new TCEs into tensorflow.train.Example format for classification purposes. This is useful for
     creating test sets of TCEs from new sectors that were not used to train the model.
@@ -179,11 +192,10 @@ def main_new_data_training_set(tce_csv, output_directory, shards, workers, only_
           output_directory, "new_train-%.5d-of-%.5d" % (i, shards))))
       
     # Use multiprocessing. One subprocess for each shard
-    num_shards = len(list_of_shards)
-    num_processes = min(num_shards, workers)
+    num_processes = min(len(list_of_shards), workers)
     pool = multiprocessing.Pool(processes = num_processes)
     async_results = [
-        pool.apply_async(_process_new_data_file_shard, file_shard, only_local, sector)
+        pool.apply_async(_process_new_data_file_shard, args = (file_shard), kwds={'only_local': only_local})
         for file_shard in list_of_shards] 
     pool.close()
     

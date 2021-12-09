@@ -1,7 +1,7 @@
 import tensorflow as tf 
 
 def main():
-    raw_dataset = tf.data.TFRecordDataset("TFRecords\\training_set-00000-of-00010")
+    raw_dataset = tf.data.TFRecordDataset("TFRecords\\test-00000-of-00001")
     for raw_record in raw_dataset.take(2):
         example = tf.train.Example()
         example.ParseFromString(raw_record.numpy())

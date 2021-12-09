@@ -26,9 +26,9 @@ def track(func):
     return wrapper
 
 @track
-def start_new_tce_formatting(tce_path):
+def start_new_tce_formatting(tce_path, astro_path):
     print("Formmatting of new tce csv using <<standard>> format.\n")
-    confirmation = etl_formatting.format_csv(tce_path)
+    confirmation = etl_formatting.format_csv(tce_path, astro_path)
     return confirmation
 
 @track

@@ -89,22 +89,36 @@ def training_pipeline():
         sector = str(i)
         etl_coordinator.etl_ingestion.create_sector_folder(sector = sector)
     lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, NAMESPACE.shards, workers, NAMESPACE.only_local)
-    # TODO neural_network_coordinator.init_training_session()
-    return
+    return True
 
 @track
 def new_data_pipeline():
     workers = multiprocess_params_util()
-    if etl_coordinator.start_new_tce_formatting(NAMESPACE.tce_csv, NAMESPACE.astro_tce):
-        lightcurves_processing_coordinator.main_new_data_training_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, 
-                                                                    NAMESPACE.shards, workers, NAMESPACE.only_local, NAMESPACE.sector)
-        #TODO neural_network_coordinator.init_training_session()
-    return
+    new_tev_path = etl_coordinator.start_new_tce_formatting(NAMESPACE.tce_csv, NAMESPACE.astro_tce)
+    print(new_tev_path)
+    lightcurves_processing_coordinator.main_new_data_training_set(new_tev_path, NAMESPACE.output_directory, 
+                                                                    NAMESPACE.shards, workers, NAMESPACE.only_local)
+    return True
+
+@track
+def training_coordinator():
+    # TODO neural_network_coordinator.init_training_session(json_path, training_files_path, validation_files_path, model_path)
+    return True
+
+@track
+def evaluation_coordinator():
+    # TODO neural_network_coordinator.init_training_session(json_path, training_files_path, validation_files_path, model_path)
+    return True
 
 def main():
-    if NAMESPACE.new_train is False:
+    if NAMESPACE.only_training:
+        training_coordinator()
+    elif NAMESPACE.only_testing:
+        evaluation_coordinator()
+    elif NAMESPACE.new_train == False:
         training_pipeline()
-    new_data_pipeline()
-    
+    else: 
+         new_data_pipeline()
+        
 if __name__ == '__main__':
-    training_pipeline()
+    main()

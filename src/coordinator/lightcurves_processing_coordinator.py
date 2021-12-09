@@ -58,26 +58,6 @@ def _process_tce(tce, only_local):
         print("Exception occurred: ", e)
     return processed_tce
 
-def _process_new_data_tce(tce, only_local):
-    """Processes the light curve for a Kepler TCE and returns an Example proto.
-
-  Args:
-    tce: Row of the input TCE table.
-    only_local: Boolean for switching to AstroNet Implement and Cosmos' one
-
-  Returns:
-    A tensorflow.train.Example proto containing TCE features.
-
-  Raises:
-    IOError or general Exceptionx: If the light curve files for this Kepler ID cannot be found.
-  """
-    try:
-        processed_tce = None
-        processed_tce = etl_coordinator.start_new_data_processing_phase(tce, only_local)
-    except (Exception, IOError) as e:
-        print("Exception occurred: ", e)
-    return processed_tce
-
 def preprocess_tce(tce_table):
     
     tce_table = tce_table.dropna()
@@ -86,39 +66,28 @@ def preprocess_tce(tce_table):
     
     tce_table = tce_table[tce_table['Transit_Depth'] > 0]
     tce_table["Duration"] /= 24  # Convert hours to days.
-    tce_table['Disposition'] = tce_table['Disposition'].replace({'IS': 'J', 'V': 'J'})
+    tce_table['Disposition'] = tce_table['Disposition'].replace({'IS': 'J', 'V': 'J'}) #Reduce classification labels
     
-    return tce_table
-
-def preprocess_new_tce(tce_table):
-    
-    tce_table = tce_table.dropna()
-    tce_table = tce_table.drop_duplicates(subset=['tic_id'])
-    
-    tce_table = tce_table[tce_table['Transit_Depth'] > 0]
-    tce_table["Duration"] /= 24  # Convert hours to days.
-    tce_table['Disposition'] = tce_table['Disposition'].replace({'IS': 'J', 'V': 'J'})
-    
-    return tce_table    
+    return tce_table 
 
 def create_input_list(tce_csv):
     """Generate pandas dataframe of TCEs to be made into file shards.
 
-    :return: pandas dataframe containing TCEs. Required columns: TIC, TCE planet number, final disposition
+    :return: pandas dataframe containing TCEs. Required columns: TIC, final disposition
     """
     ready_tce_table = None
     if type(tce_csv) == list:
         tce_table = pd.DataFrame()
         for input in tce_csv:
-            table = pd.read_csv(input, header=0, usecols=[0,1,2,6,7,8,9,10,13,14,15], 
-                                #tic, toi, dispo, epoc, period, duration, transit, sectors, camera, ccd, sn
-                                dtype={'Sectors': int,'camera': int,'ccd': int})
+            table = pd.read_csv(input, header=0, usecols=[0,2,5,6,7,8,9,10,15], 
+                                #tic, dispo, tmag, epoc, period, duration, transit, sectors, sn
+                                dtype={'Sectors': int})
             tce_table = pd.concat([tce_table, table])
     else:
-        tce_table = pd.read_csv(tce_csv, header=0, usecols=[0,1,2,6,7,8,9,10,13,14,15],
-                                dtype={'Sectors': int,'camera': int,'ccd': int})
+        tce_table = pd.read_csv(tce_csv, header=0, usecols=[0,2,5,6,7,8,9,10,15],
+                                dtype={'Sectors': int})
             
-    ready_tce_table = preprocess_new_tce(tce_table)                                   
+    ready_tce_table = preprocess_tce(tce_table)                                   
     
     return ready_tce_table
 
@@ -144,32 +113,10 @@ def _process_file_shard(tce_table, file_name, only_local = False):
                 writer.write(tce_to_write.SerializeToString())
                 
 
-
-#* Processes a single file shard, writing the processed ones into the output file_name
-#* Args:
-#*  tce_table: A Pandas DataFrame containing the TCEs in the shard
-#*  file_name: The output TFRecord file. 
-#
-def _process_new_data_file_shard(tce_table, file_name, only_local = False):
-    """Processes a single file shard.
-
-  Args:
-    tce_table: A Pandas DateFrame containing the TCEs in the shard.
-    file_name: The output TFRecord file.
-  """
-    with tf.io.TFRecordWriter(file_name) as writer:
-        for _, tce in tce_table.iterrows():
-            try:
-                tce_to_write = _process_new_data_tce(tce, only_local)
-            except(IOError, EmptyLightCurveError, SparseLightCurveError):
-                continue
-            if tce_to_write is not None:
-                writer.write(tce_to_write.SerializeToString())
-
 @track
-def main_new_data_training_set(tce_csv, output_directory, shards, workers, only_local):
+def main_test_set(tce_csv, output_directory, shards, workers, only_local):
     """
-    Make a table of new TCEs into tensorflow.train.Example format for classification purposes. This is useful for
+    Make a table of test TCEs into tensorflow.train.Example format for classification purposes. This is useful for
     creating test sets of TCEs from new sectors that were not used to train the model.
     :return:
     """
@@ -179,7 +126,7 @@ def main_new_data_training_set(tce_csv, output_directory, shards, workers, only_
     num_tces = len(tce_csv)
 
     # Randomly shuffle the TCE table.
-    np.random.seed(4890)
+    np.random.seed(2110)
     tce_table = tce_table.iloc[np.random.permutation(num_tces)]
 
     # Further split training TCEs into file shards.
@@ -189,13 +136,13 @@ def main_new_data_training_set(tce_csv, output_directory, shards, workers, only_
       start = boundaries[i]
       end = boundaries[i + 1]
       list_of_shards.append((tce_table[start:end], os.path.join(
-          output_directory, "new_train-%.5d-of-%.5d" % (i, shards))))
+          output_directory, "test-%.5d-of-%.5d" % (i, shards))))
       
     # Use multiprocessing. One subprocess for each shard
     num_processes = min(len(list_of_shards), workers)
     pool = multiprocessing.Pool(processes = num_processes)
     async_results = [
-        pool.apply_async(_process_new_data_file_shard, args = (file_shard), kwds={'only_local': only_local})
+        pool.apply_async(_process_file_shard, args = (file_shard), kwds={'only_local': only_local})
         for file_shard in list_of_shards] 
     pool.close()
     
@@ -215,7 +162,7 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     num_transits = len(tce_table)
     
     # Shuffle TCE Table
-    np.random.seed(4890)
+    np.random.seed(42429)
     tce_table = tce_table.iloc[np.random.permutation(num_transits)] # SLower than sklearn.shuffle but it now doesn't need to reset the index
     
     ##* TCE Partions:
@@ -223,15 +170,13 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     #* Validation set: 10% of TCEs
     #* Test set: 10% of TCEs
     
-    train_portion = int(0.80 * num_transits)
-    validation_portion = int(0.90 * num_transits)
+    train_portion = int(0.90 * num_transits)
     training_TCEs = tce_table[0:train_portion]
-    validation_TCEs = tce_table[train_portion:validation_portion]
-    testing_TCEs = tce_table[validation_portion:]
+    validation_TCEs = tce_table[train_portion:]
     
     print(
-      "Partitioned {num} TCEs into training ({train}), validation ({val}) and test ({test})"
-      .format(num = num_transits, train = len(training_TCEs), val = len(validation_TCEs), test = len(testing_TCEs)))
+      "Partitioned {num} TCEs into training ({train}) and validation ({val}))"
+      .format(num = num_transits, train = len(training_TCEs), val = len(validation_TCEs)))
     
     ##* Sharding of Datasets
     
@@ -248,8 +193,6 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     # Test and Validation sets since they represent 20% of all TCEs they are split in only two shards
     list_of_shards.append((validation_TCEs, os.path.join(output_directory,
                                              "val-00000-of-00001")))
-    list_of_shards.append((testing_TCEs, os.path.join(output_directory,
-                                              "test-00000-of-00001")))
      
     num_shards = len(list_of_shards)
     print(list_of_shards)

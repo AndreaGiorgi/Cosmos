@@ -1,14 +1,5 @@
 import os, time, psutil, shutil
 from glob import glob
-import lightkurve as lk
-from astroquery.mast import Observations
-
-class AstroqueryNotWorking(Exception): 
-    """Indicates Astroquery not working or not online
-	Args:
-		Exception Mast connection not established
-	"""
-    pass
 
 class SectorNotExistingError(Exception):
 	"""Indicates sector not existing in sectors' directory
@@ -91,18 +82,3 @@ def search_lightcurve(tic, sector):
         print(str(sector) + " not found in data directory")
             
     return fits_filename
-
-#TODO
-#! IMPORTANTE
-def search_lightcurve_online(tic, sector):
-    # Usa sector per aprire il settore di riferimento
-    # usa tic per avviare una ricerca unificata su tutto la super-directory per trovare il fits
-    # ritorna la tabella astropy di riferimento invialo al coordinatore. 
-    
-    search_result = lk.search_lightcurve("TIC" + str(tic), mission = "TESS", sector=sector)
-
-    print(search_result)
-    return True
-
-if __name__ == '__main__':
-    search_lightcurve_online(333674399, 19)

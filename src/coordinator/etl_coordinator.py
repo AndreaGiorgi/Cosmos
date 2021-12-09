@@ -40,7 +40,7 @@ def start_processing_phase(tce, only_local):
 @track
 def start_new_data_processing_phase(tce, only_local):
     print("Processing Phase: From New TCE data to tf.Example proto\n")
-    tensorflow_example_proto = etl_processing.process_new_data_lightcurve(tce, only_local)
+    tensorflow_example_proto = etl_processing.process_lightcurve(tce, only_local)
     return tensorflow_example_proto
 
 @track
@@ -52,7 +52,7 @@ def start_ingestion_phase(tic, sector):
 @track
 def start_new_data_ingestion_phase(tic, sector):
     print("Loading new {tic} fits file from Sector: {sector} \n".format(tic=tic, sector=sector))
-    fits_file = etl_ingestion.search_lightcurve_online(tic, sector)
+    fits_file = etl_ingestion.search_lightcurve(tic, sector)
     return fits_file
 
 @track
@@ -62,9 +62,9 @@ def start_loading_phase(fits):
     return lc_time, lc_flux
 
 @track
-def start_new_data_loading_phase(astroTable):
+def start_test_data_loading_phase(fits):
     print("Loading new fits data\n")
-    lc_time, lc_flux = etl_loading.load_new_lightcurve_data(astroTable)
+    lc_time, lc_flux = etl_loading.load_lightcurve_data(fits)
     return lc_time, lc_flux
 
 if __name__ == '__main__':

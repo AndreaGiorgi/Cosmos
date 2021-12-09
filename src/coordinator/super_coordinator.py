@@ -83,21 +83,19 @@ def multiprocess_params_util():
     return dedicated_workers
 
 @track
-def training_pipeline():
+def training_data_pipeline():
     workers = multiprocess_params_util()
-    for i in range(1,6):
+    for i in range(1,5):
         sector = str(i)
         etl_coordinator.etl_ingestion.create_sector_folder(sector = sector)
     lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, NAMESPACE.shards, workers, NAMESPACE.only_local)
     return True
 
 @track
-def new_data_pipeline():
+def test_data_pipeline():
     workers = multiprocess_params_util()
-    new_tev_path = etl_coordinator.start_new_tce_formatting(NAMESPACE.tce_csv, NAMESPACE.astro_tce)
-    print(new_tev_path)
-    lightcurves_processing_coordinator.main_new_data_training_set(new_tev_path, NAMESPACE.output_directory, 
-                                                                    NAMESPACE.shards, workers, NAMESPACE.only_local)
+    etl_coordinator.etl_ingestion.create_sector_folder(sector = 5)
+    lightcurves_processing_coordinator.main_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, NAMESPACE.shards, workers, NAMESPACE.only_local)
     return True
 
 @track

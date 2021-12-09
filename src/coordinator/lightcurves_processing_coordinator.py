@@ -166,9 +166,8 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     tce_table = tce_table.iloc[np.random.permutation(num_transits)] # SLower than sklearn.shuffle but it now doesn't need to reset the index
     
     ##* TCE Partions:
-    #* Training set: 80% of TCEs
+    #* Training set: 90% of TCEs
     #* Validation set: 10% of TCEs
-    #* Test set: 10% of TCEs
     
     train_portion = int(0.90 * num_transits)
     training_TCEs = tce_table[0:train_portion]
@@ -189,15 +188,13 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
         end = limits[shard + 1]
         list_of_shards.append((training_TCEs[start:end], os.path.join(output_directory, "training_set-%.5d-of-%.5d" % (shard, shards))))
         
-        
+
     # Test and Validation sets since they represent 20% of all TCEs they are split in only two shards
     list_of_shards.append((validation_TCEs, os.path.join(output_directory,
                                              "val-00000-of-00001")))
      
     num_shards = len(list_of_shards)
     print(list_of_shards)
-    #for file_shard in list_of_shards:
-    #    _process_file_shard(file_shard)
     
     # Use multiprocessing. One subprocess for each shard
     num_processes = min(num_shards, workers)

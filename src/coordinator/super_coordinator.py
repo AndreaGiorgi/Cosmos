@@ -79,7 +79,7 @@ def multiprocess_params_util():
     avaiable_workers = psutil.cpu_count(logical=True)
     print("Avaiable CPU Cores: ", avaiable_workers)
     dedicated_workers = int(2*avaiable_workers/3)
-    print("Dedicated CPU Cores to Preprocessing Phase: ", dedicated_workers)
+    print("Max CPU Cores to data processing phase: ", dedicated_workers)
     return dedicated_workers
 
 @track
@@ -99,24 +99,17 @@ def test_data_pipeline():
     return True
 
 @track
-def training_coordinator():
-    # TODO neural_network_coordinator.init_training_session(json_path, training_files_path, validation_files_path, model_path)
+def cosmos_training_pipeline():
+    # neural_network_coordinator.training_session(#TODO json_path, training_files_path, validation_files_path, model_path)
     return True
 
 @track
-def evaluation_coordinator():
-    # TODO neural_network_coordinator.init_training_session(json_path, training_files_path, validation_files_path, model_path)
+def cosmos_prediction_pipeline():
+    # neural_network_coordinator.prediction_session(#TODO json_path, training_files_path, validation_files_path, model_path)
     return True
 
 def main():
-    if NAMESPACE.only_training:
-        training_coordinator()
-    elif NAMESPACE.only_testing:
-        evaluation_coordinator()
-    elif NAMESPACE.new_train == False:
-        training_pipeline()
-    else: 
-         new_data_pipeline()
+    training_data_pipeline()
         
 if __name__ == '__main__':
     main()

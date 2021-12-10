@@ -1,6 +1,12 @@
 import tensorflow as tf 
 
-def main():
+def create_tfrecords_index(dataset):
+    index = None
+    #TODO
+    return index
+
+
+def open_tfrecord():
     raw_dataset = tf.data.TFRecordDataset("TFRecords\\test-00000-of-00001")
     for raw_record in raw_dataset.take(2):
         example = tf.train.Example()
@@ -8,4 +14,4 @@ def main():
         print(example)
     
 if __name__ == '__main__':
-    main()
+    open_tfrecord()

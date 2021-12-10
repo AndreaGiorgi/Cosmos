@@ -10,7 +10,7 @@ def tensor_function(tfrecords, config, mode, shuffle_buffer, repeat_dataset):
     
     
     def tensor_fn(config, params):      
-        dataset = data_ops.retrive_dataset(tfrecords, config, params["batch_size"], include_labels, reverse_time_series_prob, shuffle_filenames, repeat_dataset)
+        dataset = data_ops.retrive_dataset(tfrecords, config, params["batch_size"], include_labels, reverse_time_series_prob, shuffle_filenames, shuffle_buffer, repeat_dataset)
         return dataset
     
     return tensor_fn

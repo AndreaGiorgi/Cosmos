@@ -4,7 +4,6 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import tensorflow as tf
-import copy
 from neural_network_util import data_ops
 
 
@@ -15,8 +14,9 @@ def tensor_function(tfrecords, config, mode, shuffle_buffer, repeat_dataset):
     shuffle_filenames = (mode == tf.estimator.ModeKeys.TRAIN)
     
     
-    def tensor_fn(config, params):      
-        dataset = data_ops.retrive_dataset(tfrecords, config, params["batch_size"], include_labels, reverse_time_series_prob, shuffle_filenames, shuffle_buffer, repeat_dataset)
+    def tensor_fn(config, params):
+         
+        dataset = data_ops.retrive_dataset(tfrecords, config, params["batch_size"], labels, reverse_time_series_prob, shuffle_filenames, shuffle_buffer, repeat_dataset)
         return dataset
     
     return tensor_fn

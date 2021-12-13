@@ -83,7 +83,7 @@ def local_view(time, flux, period, duration, num_bins=61, bin_width_factor=0.16,
 
 
 def lc_processing(lc_time, lc_flux):
-    
+
     """Processes a single lightcurve info
     Args:
         lc_time: time data read from fits file
@@ -98,15 +98,15 @@ def lc_processing(lc_time, lc_flux):
     lc_flux = lc_flux[indices]
     all_time = lc_time[indices]
     all_flux = 10.**(-(lc_flux - np.median(lc_flux))/2.5)
-    
+
     return all_time, all_flux
 
 
 def load_lightcurve(tic, sector):
     """Load the lightcurve from a single tic identifier and its respective sector
-    
+
     Args:
-        tic: TESS Identifier 
+        tic: TESS Identifier
         sector: observed sector
 
     Returns:
@@ -121,12 +121,12 @@ def load_lightcurve(tic, sector):
 
     return lc_processing(lc_time, lc_flux)
 
-  
+
 def load_new_data_lightcurve(tic, sector):
     """Load the lightcurve from a single tic identifier and its respective sector
-    
+
     Args:
-        tic: TESS Identifier 
+        tic: TESS Identifier
         sector: observed sector
 
     Returns:
@@ -143,7 +143,7 @@ def load_new_data_lightcurve(tic, sector):
 
 
 def phase_fold(time, flux, period, t0):
-    
+
     time = lightcurve_utilities.phase_fold_algorithm(time, period, t0)
 
     # Sort by ascending time
@@ -151,4 +151,4 @@ def phase_fold(time, flux, period, t0):
     time = time[sorted_element]
     flux = flux[sorted_element]
 
-    return time, flux 
+    return time, flux

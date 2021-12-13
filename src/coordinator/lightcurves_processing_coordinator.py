@@ -60,13 +60,14 @@ def _process_tce(tce, only_local):
 
 def preprocess_tce(tce_table):
     
-    tce_table = tce_table.dropna()
     tce_table = tce_table.drop(['row_id'],  axis=1)
-    tce_table = tce_table.drop_duplicates(subset=['tic_id'])
-    
+    tce_table = tce_table.drop_duplicates(subset=['tic_id'], keep = "first")
+    tce_table = tce_table.dropna()
     tce_table = tce_table[tce_table['Transit_Depth'] > 0]
     tce_table["Duration"] /= 24  # Convert hours to days.
     tce_table['Disposition'] = tce_table['Disposition'].replace({'IS': 'J', 'V': 'J'}) #Reduce classification labels
+    
+    print(tce_table.info())
     
     return tce_table 
 
@@ -78,13 +79,13 @@ def create_input_list(tce_csv):
     ready_tce_table = None
     if type(tce_csv) == list:
         tce_table = pd.DataFrame()
-        for input in tce_csv:
-            table = pd.read_csv(input, header=0, usecols=[0,2,5,6,7,8,9,10,15], 
+        for input in tce_csv: #? Come memorizzare gli ID TIC separatamente per poi aggiungerli dopo la fase di training/test per una migliore comprensione dei dati
+            table = pd.read_csv(input, header=0, usecols=[0,1,3,6,7,8,9,10,11,16], 
                                 #tic, dispo, tmag, epoc, period, duration, transit, sectors, sn
                                 dtype={'Sectors': int})
             tce_table = pd.concat([tce_table, table])
     else:
-        tce_table = pd.read_csv(tce_csv, header=0, usecols=[0,2,5,6,7,8,9,10,15],
+        tce_table = pd.read_csv(tce_csv, header=0, usecols=[0,1,3,6,7,8,9,10,11,16],
                                 dtype={'Sectors': int})
             
     ready_tce_table = preprocess_tce(tce_table)                                   
@@ -126,7 +127,7 @@ def main_test_set(tce_csv, output_directory, shards, workers, only_local):
     num_tces = len(tce_csv)
 
     # Randomly shuffle the TCE table.
-    np.random.seed(2110)
+    np.random.seed(1803)
     tce_table = tce_table.iloc[np.random.permutation(num_tces)]
 
     # Further split training TCEs into file shards.

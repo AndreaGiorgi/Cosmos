@@ -1,11 +1,9 @@
-# TODO: SPIEGA STO CAZZO DI ACCROCCO
-
 import os, sys, psutil, time
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-from neural_network_util import model_util, data_util, data_ops
+from neural_network_util import model_util, data_util
 import tensorflow as tf
 
 def get_process_memory():
@@ -31,7 +29,8 @@ def training_session(json_config, training_files, validation_files, model_direct
     
     model_config = model_util.load_config(json_config) # return config dictionary
     tensorflow_estimator = tf.estimator.RunConfig(keep_checkpoint_max = 1) # return an estimator with max n° of model checkpoints
-    input_tensors = data_util.tensor_function(training_files, config = model_config.inputs, mode = tf.estimator.ModeKeys.TRAIN, model_config.shuffle_buffer)
+    input_tensors = data_util.tensor_function(training_files, config = model_config.inputs, mode = tf.estimator.ModeKeys.TRAIN, shuffle_buffer = model_config.shuffle_buffer,
+                                              repeat = 1)
     
     #cosmos_cnn = model_initializer.define_model(model_config.hparams, run_config, model_directory) #return a cosmos model using json hparams
     

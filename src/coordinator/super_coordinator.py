@@ -41,13 +41,10 @@ parser.add_argument(
     "Epoc (t0).")
 
 parser.add_argument(
-    "--astro_tce",
-    type=str,
-    required=False,
-    help="CSV file containing the TESS TCE table. Must contain "
-    "columns: row_id, tic_id, toi_id, Period, Duration, "
-    "Epoc (t0). Required if tce_csv == tev_tces for new training data augmentation"
-)
+    "--test",
+    action='store_true',
+    default=False,
+    help="Test pipeline ops")
 
 parser.add_argument(
     "--output_directory",
@@ -66,12 +63,6 @@ parser.add_argument(
     action='store_true',
     default=False,
     help="Generate just lightcurve local view rather than global and local ones?")
-
-parser.add_argument(
-    "--new_train",
-    action='store_true',
-    default=False,
-    help="Generate additional training set using tev toi-catalog data?")
 
 NAMESPACE, unparsed = parser.parse_known_args()
 
@@ -109,7 +100,10 @@ def cosmos_prediction_pipeline():
     return True
 
 def main():
-    training_data_pipeline()
+    if NAMESPACE.test:
+        test_data_pipeline()
+    else:
+        training_data_pipeline()
         
 if __name__ == '__main__':
     main()

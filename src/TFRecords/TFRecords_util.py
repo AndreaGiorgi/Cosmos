@@ -1,4 +1,10 @@
+import os, sys, psutil, time
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+
 import tensorflow as tf 
+from neural_network_util import data_ops
 
 def create_tfrecords_index(dataset):
     index = None

@@ -5,7 +5,7 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-from etl import etl_ingestion, etl_loading, etl_processing, etl_formatting
+from etl import etl_ingestion, etl_loading, etl_processing
 
 def get_process_memory():
     process = psutil.Process(os.getpid())
@@ -25,11 +25,6 @@ def track(func):
         return result
     return wrapper
 
-@track
-def start_new_tce_formatting(tce_path, astro_path):
-    print("Formmatting of new tce csv using <<standard>> format.\n")
-    confirmation = etl_formatting.format_csv(tce_path, astro_path)
-    return confirmation
 
 @track
 def start_processing_phase(tce, only_local):

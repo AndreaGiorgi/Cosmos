@@ -1,6 +1,11 @@
+import os, sys, psutil, time
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+
 import tensorflow as tf
 import copy
-from data_ops import retrive_dataset
+from neural_network_util import data_ops
 
 def tensor_function(tfrecords, config, mode, shuffle_buffer, repeat_dataset):
     

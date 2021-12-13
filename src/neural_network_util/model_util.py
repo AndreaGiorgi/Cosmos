@@ -1,6 +1,11 @@
 import json
 import tensorflow as tf
 
+import os, sys, psutil, time
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+
 # Taken from AstroNet. They know this stuff works
 def _maybe_convert_dict(value):
   if isinstance(value, dict):

@@ -1,5 +1,11 @@
+import os, sys, psutil, time
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+
 import tensorflow as tf
 from TFRecords import TFRecords_util
+
 
 def _recursive_set_batch_size(tensor_or_collection, batch_size):
   """Recursively sets the batch size in a Tensor or collection of Tensors."""
@@ -25,7 +31,7 @@ def set_batch_size(dataset, batch_size):
 
 def retrive_dataset(tfrecords, config, batch_size, labels, reverse_prob, shuffle_filenames, shuffle_buffer, repeat_dataset):
     
-    tfr_files = TODO TFRecords_util.create_tfrecords_index(tfrecords)
+    tfr_files = TFRecords_util.create_tfrecords_index(tfrecords)
 
     # Checks that labels ids are integers starting at 0
     label_ids = set(config.label_map.values())

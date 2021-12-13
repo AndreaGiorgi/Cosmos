@@ -6,5 +6,6 @@ def init_training_session():
     # TODO: Definizione funzione che carica i dati in input a partire dal TFRecord di training e di evaluation
     return
 
+
 def init_evaluation_session():
     return

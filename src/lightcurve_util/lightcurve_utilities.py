@@ -146,6 +146,7 @@ def fill_empty_bin(y):
     i += 1
   return y
 
+
 def phase_fold_algorithm(time, period, t0):
   """Creates a phase-folded time vector.
 
@@ -164,6 +165,7 @@ def phase_fold_algorithm(time, period, t0):
   result = np.mod(time + (half_period - t0), period)
   result -= half_period
   return result
+
 
 def split(all_time, all_flux, gap_width=0.75):
   """Splits a light curve on discontinuities (gaps).

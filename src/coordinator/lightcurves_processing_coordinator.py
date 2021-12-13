@@ -14,9 +14,19 @@ import tensorflow as tf
 import psutil, time
 import etl_coordinator
 
+
+class EmptyLightCurveError(Exception):
+    """Indicates light curve with no points in chosen time range."""
+
+
+class SparseLightCurveError(Exception):
+    """Indicates light curve with too few points in chosen time range."""
+
+
 def get_process_memory():
     process = psutil.Process(os.getpid())
     return process.memory_info().rss
+
 
 def track(func):
     def wrapper(*args, **kwargs):
@@ -32,11 +42,6 @@ def track(func):
         return result
     return wrapper
 
-class EmptyLightCurveError(Exception):
-    """Indicates light curve with no points in chosen time range."""
-
-class SparseLightCurveError(Exception):
-    """Indicates light curve with too few points in chosen time range."""
 
 def _process_tce(tce, only_local):
     """Processes the light curve for a Kepler TCE and returns an Example proto.
@@ -58,6 +63,7 @@ def _process_tce(tce, only_local):
         print("Exception occurred: ", e)
     return processed_tce
 
+
 def preprocess_tce(tce_table):
     
     tce_table = tce_table.drop(['row_id'],  axis=1)
@@ -70,6 +76,7 @@ def preprocess_tce(tce_table):
     print(tce_table.info())
     
     return tce_table 
+
 
 def create_input_list(tce_csv):
     """Generate pandas dataframe of TCEs to be made into file shards.
@@ -91,6 +98,7 @@ def create_input_list(tce_csv):
     ready_tce_table = preprocess_tce(tce_table)                                   
     
     return ready_tce_table
+
 
 #* Processes a single file shard, writing the processed ones into the output file_name
 #* Args:
@@ -149,6 +157,7 @@ def main_test_set(tce_csv, output_directory, shards, workers, only_local):
     
     for result in async_results:
         result.get()
+
         
 @track
 def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_local):

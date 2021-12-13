@@ -5,6 +5,7 @@ class InvalidLightcurveData(Exception):
   """Indicates light curve data has invalid data, empty columns or different data sizes."""
   pass
 
+
 def load_lightcurve_data(filename, flux_type = 'KSPSAP_FLUX'):
     """Reads time and flux measurements for a Kepler target star.
 
@@ -39,6 +40,7 @@ def load_lightcurve_data(filename, flux_type = 'KSPSAP_FLUX'):
       print("Invalid FITS data")
     
     return time, flux
+
   
 def load_new_lightcurve_data(astroTable, flux_type = 'KSPSAP_FLUX'):
     """Reads time and flux measurements for a Kepler target star.
@@ -73,6 +75,7 @@ def load_new_lightcurve_data(astroTable, flux_type = 'KSPSAP_FLUX'):
       print("Invalid FITS data")
     
     return time, flux
+
 
 if __name__ == '__main__':
     print(load_lightcurve_data('ingested_data\\sector_1\\hlsp_qlp_tess_ffi_s0001-0000000114990015_tess_v01_llc.fits'))

@@ -9,6 +9,7 @@ class EmptyLightCurveError(Exception):
     """Indicates light curve with no points in chosen time range."""
     pass
 
+
 def generate_view(time, flux, num_bins, bin_width, t_min, t_max, normalize=True):
   """Generates a view of a phase-folded light curve using a median filter.
 
@@ -32,6 +33,7 @@ def generate_view(time, flux, num_bins, bin_width, t_min, t_max, normalize=True)
 
   return view
 
+
 def global_view(time, flux, period, num_bins=201, bin_width_factor=1.2/201):
     """
     Args:
@@ -52,6 +54,7 @@ def global_view(time, flux, period, num_bins=201, bin_width_factor=1.2/201):
       bin_width=period * bin_width_factor,
       t_min=-period / 2,
       t_max=period / 2)
+
 
 def local_view(time, flux, period, duration, num_bins=61, bin_width_factor=0.16, num_durations=2):
   """Generates a 'local view' of a phase folded light curve.
@@ -98,6 +101,7 @@ def lc_processing(lc_time, lc_flux):
     
     return all_time, all_flux
 
+
 def load_lightcurve(tic, sector):
     """Load the lightcurve from a single tic identifier and its respective sector
     
@@ -116,6 +120,7 @@ def load_lightcurve(tic, sector):
     lc_time, lc_flux = etl_coordinator.start_loading_phase(lightcurve_fits)
 
     return lc_processing(lc_time, lc_flux)
+
   
 def load_new_data_lightcurve(tic, sector):
     """Load the lightcurve from a single tic identifier and its respective sector
@@ -135,6 +140,7 @@ def load_new_data_lightcurve(tic, sector):
     lc_time, lc_flux = etl_coordinator.start_new_data_loading_phase(lightcurve_astroTable)
 
     return lc_processing(lc_time, lc_flux)
+
 
 def phase_fold(time, flux, period, t0):
     

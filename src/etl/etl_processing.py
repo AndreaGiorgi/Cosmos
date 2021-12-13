@@ -12,10 +12,12 @@ class SparseLightCurveError(Exception):
     """Indicates light curve with too few points in chosen time range."""
     pass
 
+
 def _set_float_feature(ex, name, value):
   """Sets the value of a float feature in a tensorflow.train.Example proto."""
   assert name not in ex.features.feature, "Duplicate feature: %s" % name
   ex.features.feature[name].float_list.value.extend([float(v) for v in value])
+
 
 def _set_bytes_feature(ex, name, value):
   """Sets the value of a bytes feature in a tensorflow.train.Example proto."""
@@ -28,6 +30,7 @@ def _set_int64_feature(ex, name, value):
   """Sets the value of an int64 feature in a tensorflow.train.Example proto."""
   assert name not in ex.features.feature, "Duplicate feature: %s" % name
   ex.features.feature[name].int64_list.value.extend([int(v) for v in value])
+
   
 def process_lightcurve(tce, only_local_flag):
     try:
@@ -64,6 +67,7 @@ def process_lightcurve(tce, only_local_flag):
                 _set_bytes_feature(example, col_name, [value])
                 
     return example
+
 
 def process_new_data_lightcurve(tce, only_local_flag):
     try:

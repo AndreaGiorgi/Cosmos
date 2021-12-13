@@ -25,9 +25,11 @@ def _recursive_set_batch_size(tensor_or_collection, batch_size):
 
   return tensor_or_collection
 
+
 def set_batch_size(dataset, batch_size):
   """Sets the batch dimension in all Tensors to batch_size."""
   return dataset.map(lambda t: _recursive_set_batch_size(t, batch_size))
+
 
 def retrive_dataset(tfrecords, config, batch_size, labels, reverse_prob, shuffle_filenames, shuffle_buffer, repeat_dataset):
     

@@ -66,12 +66,14 @@ parser.add_argument(
 
 NAMESPACE, unparsed = parser.parse_known_args()
 
+
 def multiprocess_params_util():
     avaiable_workers = psutil.cpu_count(logical=True)
     print("Avaiable CPU Cores: ", avaiable_workers)
     dedicated_workers = int(2*avaiable_workers/3)
     print("Max CPU Cores to data processing phase: ", dedicated_workers)
     return dedicated_workers
+
 
 @track
 def training_data_pipeline():
@@ -82,6 +84,7 @@ def training_data_pipeline():
     lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, NAMESPACE.shards, workers, NAMESPACE.only_local)
     return True
 
+
 @track
 def test_data_pipeline():
     workers = multiprocess_params_util()
@@ -89,15 +92,18 @@ def test_data_pipeline():
     lightcurves_processing_coordinator.main_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, NAMESPACE.shards, workers, NAMESPACE.only_local)
     return True
 
+
 @track
 def cosmos_training_pipeline():
     # neural_network_coordinator.training_session(#TODO json_path, training_files_path, validation_files_path, model_path)
     return True
 
+
 @track
 def cosmos_prediction_pipeline():
     # neural_network_coordinator.prediction_session(#TODO json_path, training_files_path, validation_files_path, model_path)
     return True
+
 
 def main():
     if NAMESPACE.test:

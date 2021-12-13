@@ -7,6 +7,7 @@ import tensorflow as tf
 import copy
 from neural_network_util import data_ops
 
+
 def tensor_function(tfrecords, config, mode, shuffle_buffer, repeat_dataset):
     
     labels = (mode in [tf.estimator.ModeKeys.TRAIN, tf.estimator.ModeKeys.EVAL])

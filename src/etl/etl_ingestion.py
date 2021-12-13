@@ -15,9 +15,11 @@ class FitsNotFoundError(Exception):
 	"""
 	pass
 
+
 def get_process_memory():
     process = psutil.Process(os.getpid())
     return process.memory_info().rss
+
 
 def track(func):
     def wrapper(*args, **kwargs):
@@ -32,6 +34,7 @@ def track(func):
             elapsed_time))
         return result
     return wrapper
+
 
 @track
 def create_sector_folder(sector):
@@ -64,6 +67,7 @@ def create_sector_folder(sector):
             print("Starting folder removed for memory management. ")
         except OSError as e:
             print("Can't remove {dir}: {err}".format(dir=data_path, err=e)) 
+
             
 @track
 def search_lightcurve(tic, sector):

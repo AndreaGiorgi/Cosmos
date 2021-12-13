@@ -1,14 +1,19 @@
-import os, sys, psutil, time
+import os
+import sys
+import psutil
+import time
+from neural_network_util import model_util, data_util
+import tensorflow as tf
+
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-from neural_network_util import model_util, data_util
-import tensorflow as tf
 
 def get_process_memory():
     process = psutil.Process(os.getpid())
     return process.memory_info().rss
+
 
 def track(func):
     def wrapper(*args, **kwargs):
@@ -24,6 +29,7 @@ def track(func):
         return result
     return wrapper
 
+
 @track
 def training_session(json_config, training_files, validation_files, model_directory):
     
@@ -31,10 +37,10 @@ def training_session(json_config, training_files, validation_files, model_direct
     tensorflow_estimator = tf.estimator.RunConfig(keep_checkpoint_max = 1) # return an estimator with max n° of model checkpoints
     input_tensors = data_util.tensor_function(training_files, config = model_config.inputs, mode = tf.estimator.ModeKeys.TRAIN, shuffle_buffer = model_config.shuffle_buffer,
                                               repeat = 1)
-    
     #cosmos_cnn = model_initializer.define_model(model_config.hparams, run_config, model_directory) #return a cosmos model using json hparams
     
     return True
+
 
 @track
 def init_evaluation_session(json_config, testing_files, model_directory):

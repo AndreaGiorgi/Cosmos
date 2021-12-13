@@ -1,4 +1,5 @@
-import os, sys, psutil, time
+import os, sys
+import glob as g
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
@@ -6,9 +7,10 @@ sys.path.append(parentdir)
 import tensorflow as tf
 from neural_network_util import data_ops
 
-def create_tfrecords_index(dataset):
-    index = None
-    #TODO
+def create_tfrecords_index(dataset, folder):
+
+    index = g.glob("src\\{folder}\\*{dataset}*".format(folder = folder, dataset = dataset))
+    print(index)
     return index
 
 
@@ -20,4 +22,4 @@ def open_tfrecord():
         print(example)
 
 if __name__ == '__main__':
-    open_tfrecord()
+    create_tfrecords_index("training_set", "TFRecords")

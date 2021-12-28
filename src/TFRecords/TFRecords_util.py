@@ -9,13 +9,13 @@ from neural_network_util import data_ops
 
 def create_tfrecords_index(dataset, folder):
 
-    index = g.glob("src\\{folder}\\*{dataset}*".format(folder = folder, dataset = dataset))
-    print(index)
+    filenames = g.glob("src\\{folder}\\*{dataset}*".format(folder = folder, dataset = dataset))
+    index = ','.join(filenames)
     return index
 
 
 def open_tfrecord():
-    raw_dataset = tf.data.TFRecordDataset("src\\TFRecords\\val-00000-of-00001")
+    raw_dataset = tf.data.TFRecordDataset("src\\TFRecords\\training_set-00001-of-00002")
     for raw_record in raw_dataset.take(1):
         example = tf.train.Example()
         example.ParseFromString(raw_record.numpy())

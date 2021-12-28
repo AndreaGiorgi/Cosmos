@@ -28,9 +28,14 @@
 			"Transit_Depth": {
 				"length": 1,
 				"is_time_series": "False"
+			},
+			"teff": {
+				"length": 1,
+				"is_time_series": "False"
 			}
 		},
 		"label_feature": "Disposition",
+
 		"label_map": {
 			"PC": 1,
 			"EB": 0,
@@ -43,5 +48,6 @@
 		"batch_size": 32,
 		"learning_rate": 1e-5,
 		"optimizer": "adam"
-	}
+	},
+	"folder": "TFRecords"
 }

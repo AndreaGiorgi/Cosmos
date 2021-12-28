@@ -9,8 +9,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import psutil, argparse, time
-import lightcurves_processing_coordinator
-from coordinator import etl_coordinator, neural_network_coordinator
+from coordinator import etl_coordinator, lightcurves_processing_coordinator, neural_network_coordinator
 
 def get_process_memory():
     process = psutil.Process(os.getpid())

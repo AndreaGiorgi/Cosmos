@@ -1,7 +1,4 @@
-## Coordinatore delle operazioni di trasformazione, permette di effettuare il processamento in batch dei dati. 
-# TODO: SPIEGA STO CAZZO DI ACCROCCO
-#! FUNZIONA? BOH SPERAMO 
-
+## Coordinatore delle operazioni di trasformazione, permette di effettuare il processamento in batch dei dati.
 import os, sys, psutil, time
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
@@ -12,15 +9,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import psutil, time
-import etl_coordinator
-
-
-class EmptyLightCurveError(Exception):
-    """Indicates light curve with no points in chosen time range."""
-
-
-class SparseLightCurveError(Exception):
-    """Indicates light curve with too few points in chosen time range."""
+from lightcurve_util import lightcurve_multiprocessing, lightcurve_tce
 
 
 def get_process_memory():
@@ -43,85 +32,6 @@ def track(func):
     return wrapper
 
 
-def _process_tce(tce, only_local):
-    """Processes the light curve for a Kepler TCE and returns an Example proto.
-
-  Args:
-    tce: Row of the input TCE table.
-    only_local: Boolean for switching to AstroNet Implement and Cosmos' one
-
-  Returns:
-    A tensorflow.train.Example proto containing TCE features.
-
-  Raises:
-    IOError or general Exceptionx: If the light curve files for this Kepler ID cannot be found.
-  """
-    try:
-        processed_tce = None
-        processed_tce = etl_coordinator.start_processing_phase(tce, only_local)
-    except (Exception, IOError) as e:
-        print("Exception occurred: ", e)
-    return processed_tce
-
-
-def preprocess_tce(tce_table):
-
-    tce_table = tce_table.drop(['row_id'],  axis=1)
-    tce_table = tce_table.drop_duplicates(subset=['tic_id'], keep = "first")
-    tce_table = tce_table.dropna()
-    tce_table = tce_table[tce_table['Transit_Depth'] > 0]
-    tce_table["Duration"] /= 24  # Convert hours to days.
-    tce_table['Disposition'] = tce_table['Disposition'].replace({'IS': 'J', 'V': 'O'}) #Reduce classification labels [Instrumental Noise -> Junk, Variable Star -> Others]
-    #? Disposition rimaste: [Planet Candidate PC (1), Eclipsing Binary EB (0), Junk J (0), Other O (0)]
-    print(tce_table.info())
-
-    return tce_table
-
-
-def create_input_list(tce_csv):
-    """Generate pandas dataframe of TCEs to be made into file shards.
-
-    :return: pandas dataframe containing TCEs. Required columns: TIC, final disposition
-    """
-    ready_tce_table = None
-    if type(tce_csv) == list:
-        tce_table = pd.DataFrame()
-        for input in tce_csv: #? Come memorizzare gli ID TIC separatamente per poi aggiungerli dopo la fase di training/test per una migliore comprensione dei dati
-            table = pd.read_csv(input, header=0, usecols=[0,1,3,6,7,8,9,10,11,16],
-                                #tic, dispo, tmag, epoc, period, duration, transit, sectors, sn
-                                dtype={'Sectors': int})
-            tce_table = pd.concat([tce_table, table])
-    else:
-        tce_table = pd.read_csv(tce_csv, header=0, usecols=[0,1,3,6,7,8,9,10,11,16],
-                                dtype={'Sectors': int})
-
-    ready_tce_table = preprocess_tce(tce_table)
-
-    return ready_tce_table
-
-
-#* Processes a single file shard, writing the processed ones into the output file_name
-#* Args:
-#*  tce_table: A Pandas DataFrame containing the TCEs in the shard
-#*  file_name: The output TFRecord file.
-#
-def _process_file_shard(tce_table, file_name, only_local = False):
-    """Processes a single file shard.
-
-  Args:
-    tce_table: A Pandas DateFrame containing the TCEs in the shard.
-    file_name: The output TFRecord file.
-  """
-    with tf.io.TFRecordWriter(file_name) as writer:
-        for _, tce in tce_table.iterrows():
-            try:
-                tce_to_write = _process_tce(tce, only_local)
-            except(IOError, EmptyLightCurveError, SparseLightCurveError):
-                continue
-            if tce_to_write is not None:
-                writer.write(tce_to_write.SerializeToString())
-
-
 @track
 def main_test_set(tce_csv, output_directory, shards, workers, only_local):
     """
@@ -131,7 +41,7 @@ def main_test_set(tce_csv, output_directory, shards, workers, only_local):
     """
     # Make the output directory if it doesn't already exist.
     tf.io.gfile.makedirs(output_directory)
-    tce_table = create_input_list(tce_csv)
+    tce_table = lightcurve_tce.create_input_list(tce_csv)
     num_tces = len(tce_csv)
 
     # Randomly shuffle the TCE table.
@@ -151,7 +61,7 @@ def main_test_set(tce_csv, output_directory, shards, workers, only_local):
     num_processes = min(len(list_of_shards), workers)
     pool = multiprocessing.Pool(processes = num_processes)
     async_results = [
-        pool.apply_async(_process_file_shard, args = (file_shard), kwds={'only_local': only_local})
+        pool.apply_async(lightcurve_multiprocessing.process_file_shard, args = (file_shard), kwds={'only_local': only_local})
         for file_shard in list_of_shards]
     pool.close()
 
@@ -168,7 +78,7 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     """
     # Make the output directory if it doesn't already exist.
     tf.io.gfile.makedirs(output_directory)
-    tce_table = create_input_list(tce_csv)
+    tce_table = lightcurve_tce.create_input_list(tce_csv)
     num_transits = len(tce_table)
 
     # Shuffle TCE Table
@@ -210,7 +120,7 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     num_processes = min(num_shards, workers)
     pool = multiprocessing.Pool(processes = num_processes)
     async_results = [
-        pool.apply_async(_process_file_shard, args = (file_shard), kwds={'only_local': only_local})
+        pool.apply_async(lightcurve_multiprocessing.process_file_shard, args = (file_shard), kwds={'only_local': only_local})
         for file_shard in list_of_shards]
     pool.close()
 

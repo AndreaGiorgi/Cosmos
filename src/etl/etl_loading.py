@@ -32,16 +32,16 @@ def load_lightcurve_data(filename, flux_type = 'KSPSAP_FLUX'):
         pass
       else:
         raise InvalidLightcurveData
-      
+
       quality_flag = np.where(np.array(lightcurve_fits['QUALITY']) == 0)
       time = time[quality_flag]
       flux = flux[quality_flag]
     except IOError:
       print("Invalid FITS data")
-    
+
     return time, flux
 
-  
+
 def load_new_lightcurve_data(astroTable, flux_type = 'KSPSAP_FLUX'):
     """Reads time and flux measurements for a Kepler target star.
 
@@ -59,7 +59,7 @@ def load_new_lightcurve_data(astroTable, flux_type = 'KSPSAP_FLUX'):
       flux: Numpy array of flux values corresponding to the time array.
     """
     try:
-      time = np.array(astroTable["TIME"]) 
+      time = np.array(astroTable["TIME"])
       flux = np.array(astroTable[flux_type])
       quality = np.array(astroTable['QUALITY'])
 
@@ -67,13 +67,13 @@ def load_new_lightcurve_data(astroTable, flux_type = 'KSPSAP_FLUX'):
         pass
       else:
         raise InvalidLightcurveData
-      
+
       quality_flag = np.where(np.array(astroTable['QUALITY']) == 0)
       time = time[quality_flag]
       flux = flux[quality_flag]
     except IOError:
       print("Invalid FITS data")
-    
+
     return time, flux
 
 

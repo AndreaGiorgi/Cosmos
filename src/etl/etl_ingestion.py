@@ -63,12 +63,12 @@ def create_sector_folder(sector):
         except OSError as e:
              print("Can't create {dir}: {err}".format(dir=sector_base_path, err=e))
         try:
-            os.rmdir(data_path) 
+            os.rmdir(data_path)
             print("Starting folder removed for memory management. ")
         except OSError as e:
-            print("Can't remove {dir}: {err}".format(dir=data_path, err=e)) 
+            print("Can't remove {dir}: {err}".format(dir=data_path, err=e))
 
-            
+
 @track
 def search_lightcurve(tic, sector):
     sector_base_path = 'ingested_data\\'
@@ -84,5 +84,5 @@ def search_lightcurve(tic, sector):
                 print(str(tic) + " lightcurve not found.")
     except SectorNotExistingError:
         print(str(sector) + " not found in data directory")
-            
+
     return fits_filename

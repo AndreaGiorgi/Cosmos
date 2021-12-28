@@ -58,7 +58,7 @@ def load_config(config_path):
             f.close()
     except ValueError and IOError as e:
         print(e)
-        
+
     config = ConfigDict(config)
-     
+
     return config

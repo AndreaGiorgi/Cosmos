@@ -110,6 +110,6 @@ def main():
         test_data_pipeline()
     else:
         training_data_pipeline()
-        
+
 if __name__ == '__main__':
     main()

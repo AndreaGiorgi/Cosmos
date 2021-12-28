@@ -11,7 +11,7 @@ def get_process_memory():
     process = psutil.Process(os.getpid())
     return process.memory_info().rss
 
-    
+
 def track(func):
     def wrapper(*args, **kwargs):
         mem_before = get_process_memory()/1024/1024

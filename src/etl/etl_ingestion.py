@@ -59,7 +59,7 @@ def create_sector_folder(sector):
                                 for filename in glob(os.path.join(stellar_frame, '*.fits')):
                                     shutil.move(filename, sector_base_path)
                                     num_ingested_files += 1
-            print("Sector " + str(sector) + " ingested. Lightcurves found and moved into relevant directory: " + str(num_ingested_files))                     
+            print("Sector " + str(sector) + " ingested. Lightcurves found and moved into relevant directory: " + str(num_ingested_files))
         except OSError as e:
              print("Can't create {dir}: {err}".format(dir=sector_base_path, err=e))
         try:

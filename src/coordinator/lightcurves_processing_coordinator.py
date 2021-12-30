@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import psutil, time
-from lightcurve_util import lightcurve_multiprocessing, lightcurve_tce
+from lightcurve import lightcurve_multiprocessing, lightcurve_tce
 
 
 def get_process_memory():

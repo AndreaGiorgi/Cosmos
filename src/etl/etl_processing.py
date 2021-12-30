@@ -1,8 +1,8 @@
 ## ETL: Trasform
-#* Lettura della lightcurve e processamento in NumPy Array 1D 
+#* Lettura della lightcurve e processamento in NumPy Array 1D
 import numpy as np
 import tensorflow as tf
-from lightcurve_util import lighcurve_preprocess
+from lightcurve import lighcurve_preprocess
 
 class EmptyLightCurveError(Exception):
     """Indicates light curve with no points in chosen time range."""
@@ -46,16 +46,18 @@ def process_lightcurve(tce, only_local_flag):
 
     try:
         global_view = None
-        local_view = lighcurve_preprocess.local_view(time, flux, tce.Period, tce.Duration)
         if only_local_flag is False:
             global_view = lighcurve_preprocess.global_view(time, flux, tce.Period)
+        else:
+            local_view = lighcurve_preprocess.local_view(time, flux, tce.Period, tce.Duration)
     except Exception as e:
         print('Global or Local view generation error: ', e)
 
     example = tf.train.Example()
     if only_local_flag is False:
         _set_float_feature(example, "global_view", global_view)
-    _set_float_feature(example, "local_view", local_view)
+    else:
+        _set_float_feature(example, "local_view", local_view)
 
     for col_name, value in tce.items():
         if np.issubdtype(type(value), np.integer):
@@ -68,39 +70,3 @@ def process_lightcurve(tce, only_local_flag):
 
     return example
 
-
-def process_new_data_lightcurve(tce, only_local_flag):
-    try:
-        time, flux = lighcurve_preprocess.load_new_data_lightcurve(tce.tic_id, sector=tce.Sectors)
-    except (RuntimeWarning, Exception) as e:
-        print('Too many invalid values in TIC %s', tce.tic_id)
-        print('Loading error occured: ', e)
-
-    try:
-        time, flux = lighcurve_preprocess.phase_fold(time, flux, tce.Period, tce.Epoc)
-    except Exception as e:
-        print('Phase Folding error occured: ', e)
-
-    try:
-        global_view = None
-        local_view = lighcurve_preprocess.local_view(time, flux, tce.Period, tce.Duration)
-        if only_local_flag is False:
-            global_view = lighcurve_preprocess.global_view(time, flux, tce.Period)
-    except Exception as e:
-        print('Global or Local view generation error: ', e)
-
-    example = tf.train.Example()
-    if only_local_flag is False:
-        _set_float_feature(example, "global_view", global_view)
-    _set_float_feature(example, "local_view", local_view)
-
-    for col_name, value in tce.items():
-        if np.issubdtype(type(value), np.integer):
-            _set_int64_feature(example, col_name, [value])
-        else:
-            try:
-                _set_float_feature(example, col_name, [float(value)])
-            except ValueError:
-                _set_bytes_feature(example, col_name, [value])
-
-    return example

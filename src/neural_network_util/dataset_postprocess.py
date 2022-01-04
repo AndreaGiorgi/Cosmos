@@ -5,7 +5,7 @@ sys.path.append(parentdir)
 
 import tensorflow as tf
 
-def dataset_post_processing(dataset, prefetch, batch_size):
+def post_build_ops(dataset, prefetch, batch_size):
     dataset = dataset.shuffle(2110)
     # Batch
     dataset = dataset.batch(batch_size)

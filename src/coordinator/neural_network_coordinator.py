@@ -35,10 +35,9 @@ def track(func):
 def training_session(json_config, training_files, validation_files, model_path):
 
     model_config = model_util.load_config(json_config) # return config dictionary
-    training_dataset = data_ops.dataset_builder(training_files, model_config.folder, model_config.inputs, 0.5, 500)
-    validation_tensors = data_ops.dataset_builder(validation_files, model_config.folder, model_config.inputs, 0.5, 500)
-
-    cosmos_model =  model_initializer.model_builder(model_config.hparams) #return a cosmos model using json hparams
+    lc_training_dataset, aux_training_dataset = dataset_builder.dataset_builder(training_files, model_config.folder, model_config.inputs, 0.5, 500)
+    lc_validation_dataset, aux_validation_dataset = dataset_builder.dataset_builder(validation_files, model_config.folder, model_config.inputs, 0.5, 500)
+    cosmos_model =  model_initializer.training(lc_training_dataset, lc_validation_dataset) #return a cosmos model using json hparams
 
     #cosmos_cnn.train(training_tensors, validation_tensors, max_epochs = 5000)
 
@@ -46,4 +45,4 @@ def training_session(json_config, training_files, validation_files, model_path):
 
 
 if __name__=='__main__':
-    training_session('model_config.json','training_set', 'val', 'src\\model_checkpoint')
+    training_session('global_model_config.json','training_set', 'val', 'src\\model_checkpoint')

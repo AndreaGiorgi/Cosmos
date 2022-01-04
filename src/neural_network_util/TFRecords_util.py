@@ -5,10 +5,8 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import tensorflow as tf
-from neural_network_util import data_ops
 
 def create_tfrecords_index(dataset, folder):
-
     filenames = g.glob("src\\{folder}\\*{dataset}*".format(folder = folder, dataset = dataset))
     index = ','.join(filenames)
     return index

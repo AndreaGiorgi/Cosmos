@@ -3,35 +3,31 @@
 		"features": {
 			"global_view": {
 				"length": 201,
-				"is_time_series": "True"
-			},
-			"local_view": {
-				"length": 61,
-				"is_time_series": "True"
+				"is_time_series": 1
 			},
 			"Duration": {
 				"length": 1,
-				"is_time_series": "False"
+				"is_time_series": 0
 			},
 			"Epoc": {
 				"length": 1,
-				"is_time_series": "False"
+				"is_time_series": 0
 			},
 			"Period": {
 				"length": 1,
-				"is_time_series": "False"
+				"is_time_series": 0
 			},
 			"Tmag": {
 				"length": 1,
-				"is_time_series": "False"
+				"is_time_series": 0
 			},
 			"Transit_Depth": {
 				"length": 1,
-				"is_time_series": "False"
+				"is_time_series": 0
 			},
 			"teff": {
 				"length": 1,
-				"is_time_series": "False"
+				"is_time_series": 0
 			}
 		},
 		"label_feature": "Disposition",
@@ -49,5 +45,5 @@
 		"learning_rate": 1e-5,
 		"optimizer": "adam"
 	},
-	"folder": "TFRecords"
+	"folder": "TFRecords_global"
 }

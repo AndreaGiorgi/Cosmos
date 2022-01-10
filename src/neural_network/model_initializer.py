@@ -3,17 +3,17 @@ from tensorflow.keras import Model, Input
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, BatchNormalization, Dropout, Conv1D, MaxPool1D
 from tensorflow.keras.optimizers import Adadelta, Adam
-from tensorflow.keras.metrics import AUC
+from tensorflow.keras.initializers import lecun_normal
+from tensorflow.keras.utils import to_categorical
+from matplotlib import pyplot
 import tensorflow_datasets as tfds
-import sklearn
+
 
 def callbacks_builder():
-    initial_learning_rate = 0.01
-    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(initial_learning_rate, decay_steps=20, decay_rate=0.96, staircase=True)
     #checkpoint_cb = tf.keras.callbacks.ModelCheckpoint("model_{type}.h5".format(type = data_type), save_best_only=True)
     early_stopping_cb = tf.keras.callbacks.EarlyStopping(monitor = 'loss', patience=20, restore_best_weights=True)
 
-    return lr_schedule, early_stopping_cb
+    return early_stopping_cb
 
 
 def training_pipeline():
@@ -41,7 +41,7 @@ def _aux_dataset_formatter(dataset):
 
     y = df['targets']
     x = df.drop(labels=['targets'], axis=1)
-
+    y = to_categorical(y)
     return x, y
 
 def _mlp_builder(dataset, val_dataset, test_set):
@@ -50,26 +50,35 @@ def _mlp_builder(dataset, val_dataset, test_set):
     x_val, y_val = _aux_dataset_formatter(val_dataset)
     x_test, y_test = _aux_dataset_formatter(test_set)
 
+    initializer = lecun_normal()
     inputs = Input(shape=(5,), name = 'inputs')
     x = BatchNormalization()(inputs)
-    x = Dense(512, activation='relu', name="dense_1")(x)
-    x = Dropout(0.25)(x)
-    x = Dense(512, activation='relu', name="dense_2")(x)
-    x = Dense(512, activation='relu', name="dense_3")(x)
-    x = Dense(512, activation='relu', name="dense_4")(x)
-    x = Dense(512, activation='relu', name="dense_5")(x)
-    outputs = Dense(3, activation='softmax',name="predictions")(x)
+    x = Dense(512, activation='selu', name="dense_1", kernel_initializer=initializer)(x)
+    x = Dense(512, activation='selu', name="dense_2", kernel_initializer=initializer)(x)
+    x = Dense(512, activation='selu', name="dense_3", kernel_initializer=initializer)(x)
+    x = Dense(512, activation='selu', name="dense_4", kernel_initializer=initializer)(x)
+    x = Dense(512, activation='selu', name="dense_5", kernel_initializer=initializer)(x)
+    outputs = Dense(2, activation='softmax',name="predictions")(x)
 
     model = Model(inputs=inputs, outputs=outputs)
-    model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(amsgrad=True), metrics=['accuracy'])
 
     print(model.summary())
-    _, early = callbacks_builder()
-    model.fit(x_train, y_train, epochs=50, batch_size=128, callbacks = [early], validation_data=(x_val, y_val), validation_freq = 2, use_multiprocessing=True)
-    y_pred = model.predict(x_test, batch_size = 128, use_multiprocessing=True)
-    print(sklearn.metrics.accuracy_score(y_test, y_pred))
+    early = callbacks_builder()
+    history = model.fit(x_train, y_train, epochs=100, batch_size=128, callbacks = early, validation_data=(x_val, y_val), validation_freq = 2, use_multiprocessing=True)
 
-    return
+    # evaluate the model
+    _, train_acc = model.evaluate(x_train, y_train, verbose=0)
+    _, test_acc = model.evaluate(x_test, y_test, verbose=0)
+    print('Train: %.3f, Test: %.3f' % (train_acc, test_acc))
+    # plot accuracy during training
+    pyplot.title('Accuracy')
+    pyplot.plot(history.history['accuracy'], label='train')
+    pyplot.plot(history.history['val_accuracy'], label='test')
+    pyplot.legend()
+    pyplot.show()
+
+    return model
 
 
 def _dcnn_builder():
@@ -83,9 +92,16 @@ def _dcnn_builder():
     #x_val, y_val = _lc_dataset_formatter(val_dataset)
 
     inputs = Input(shape=(1,), name='inputs')
-    
+    x = Conv1D(filters = 64, kernel_size = 50, activation='relu')(inputs)
+    x = MaxPool1D(pool_size= 32, strides= 32)(x)
+    x = Conv1D(filters = 64, kernel_size = 50, activation='relu')(x)
+    x = MaxPool1D(pool_size= 32, strides= 32)(x)
+    x = Conv1D(filters = 64, kernel_size = 50, activation='relu')(x)
+    x = MaxPool1D(pool_size= 32, strides= 32)(x)
+    x = Conv1D(filters = 64, kernel_size = 50, activation='relu')(x)
+    x = MaxPool1D(pool_size= 32, strides= 32)(x)
 
-    return
+    return 
 
 
 def _combined_fnn_builder():

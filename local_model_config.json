@@ -29,7 +29,7 @@
 		"label_feature": "Disposition",
 		"label_map": {
 			"PC": 1,
-			"EB": 0,
+			"EB": 2,
 			"O": 0,
 			"J": 0
 		}

@@ -24,7 +24,7 @@ def load_lightcurve_data(filename, flux_type = 'KSPSAP_FLUX'):
     """
     try:
       lightcurve_fits = Table.read(filename, format = 'fits')
-      time = np.array(lightcurve_fits["TIME"]) 
+      time = np.array(lightcurve_fits["TIME"])
       flux = np.array(lightcurve_fits[flux_type])
       quality = np.array(lightcurve_fits['QUALITY'])
 

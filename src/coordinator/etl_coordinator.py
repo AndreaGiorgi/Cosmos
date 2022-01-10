@@ -33,24 +33,9 @@ def start_processing_phase(tce, only_local):
     tensorflow_example_proto = etl_processing.process_lightcurve(tce, only_local)
     return tensorflow_example_proto
 
-
-@track
-def start_new_data_processing_phase(tce, only_local):
-    print("Processing Phase: From New TCE data to tf.Example proto\n")
-    tensorflow_example_proto = etl_processing.process_lightcurve(tce, only_local)
-    return tensorflow_example_proto
-
-
 @track
 def start_ingestion_phase(tic, sector):
     print("Loading {tic} fits file from Sector: {sector} \n".format(tic=tic, sector=sector))
-    fits_file = etl_ingestion.search_lightcurve(tic, sector)
-    return fits_file
-
-
-@track
-def start_new_data_ingestion_phase(tic, sector):
-    print("Loading new {tic} fits file from Sector: {sector} \n".format(tic=tic, sector=sector))
     fits_file = etl_ingestion.search_lightcurve(tic, sector)
     return fits_file
 

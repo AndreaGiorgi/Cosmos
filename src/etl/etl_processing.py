@@ -60,9 +60,9 @@ def process_lightcurve(tce, only_local_flag):
         _set_float_feature(example, "local_view", local_view)
 
     for col_name, value in tce.items():
-        if np.issubdtype(type(value), np.integer):
-            _set_int64_feature(example, col_name, [value])
-        else:
+      #  if np.issubdtype(type(value), np.integer):
+      #      _set_int64_feature(example, col_name, [value])
+      #  else:
             try:
                 _set_float_feature(example, col_name, [float(value)])
             except ValueError:

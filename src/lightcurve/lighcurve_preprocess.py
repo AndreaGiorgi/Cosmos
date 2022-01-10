@@ -1,5 +1,3 @@
-# TODO: Spiegazione del file
-
 import numpy as np
 from coordinator import etl_coordinator
 from lightcurve import lightcurve_utilities

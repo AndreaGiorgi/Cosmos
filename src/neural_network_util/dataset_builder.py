@@ -11,13 +11,13 @@ from neural_network_util import TFRecords_util, dataset_postprocess
 AUTOTUNE = tf.data.AUTOTUNE
 
 
-def dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, test = False):
-    lc_dataset = lc_dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, test)
-    aux_datset = aux_dataset_builder(tfrecords, folder, config, shuffle_buffer, test)
+def dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, training = True):
+    lc_dataset = lc_dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, training)
+    aux_datset = aux_dataset_builder(tfrecords, folder, config, shuffle_buffer, training)
     return lc_dataset, aux_datset
 
 
-def aux_dataset_builder(tfrecords, folder, config, shuffle_buffer, test):
+def aux_dataset_builder(tfrecords, folder, config, shuffle_buffer, training):
         tfr_files = TFRecords_util.create_tfrecords_index(tfrecords, folder)
         file_patterns = tfr_files.split(",")
         filenames = []
@@ -69,11 +69,12 @@ def aux_dataset_builder(tfrecords, folder, config, shuffle_buffer, test):
         dataset = dataset.with_options(ignore_order)
         # Map the parser over the dataset.
         dataset = dataset.map(dataset_parser, num_parallel_calls=AUTOTUNE)
-        dataset = dataset_postprocess.post_build_ops(dataset, AUTOTUNE, 64, test)
+        dataset = dataset.shuffle(shuffle_buffer, seed = 42)
+
 
         return dataset
 
-def lc_dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, test):
+def lc_dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, training = True):
 
     tfr_files = TFRecords_util.create_tfrecords_index(tfrecords, folder)
     file_patterns = tfr_files.split(",")
@@ -128,6 +129,6 @@ def lc_dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, 
     dataset = dataset.with_options(ignore_order)
     # Map the parser over the dataset.
     dataset = dataset.map(dataset_parser, num_parallel_calls=AUTOTUNE)
-    dataset = dataset_postprocess.post_build_ops(dataset, AUTOTUNE, 64, test)
+    dataset = dataset.shuffle(shuffle_buffer, seed = 42)
 
     return dataset

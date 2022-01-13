@@ -1,20 +1,35 @@
 import tensorflow as tf
+import numpy as np
+from keras import backend as K
+from sklearn.preprocessing import StandardScaler
+from imblearn.over_sampling import ADASYN
+from imblearn.under_sampling import RandomUnderSampler
+from imblearn.pipeline import Pipeline
 from tensorflow.keras import Model, Input
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, BatchNormalization, Dropout, Conv1D, MaxPool1D
-from tensorflow.keras.optimizers import Adadelta, Adam
-from tensorflow.keras.initializers import lecun_normal
+from tensorflow.keras.layers import Dense, BatchNormalization, Dropout, Conv1D, MaxPool1D, Flatten
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.initializers import lecun_normal, RandomNormal, Constant
 from tensorflow.keras.utils import to_categorical
 from matplotlib import pyplot
+from sklearn.metrics import classification_report
 import tensorflow_datasets as tfds
 
+def recall_m(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
 
-def callbacks_builder():
-    #checkpoint_cb = tf.keras.callbacks.ModelCheckpoint("model_{type}.h5".format(type = data_type), save_best_only=True)
-    early_stopping_cb = tf.keras.callbacks.EarlyStopping(monitor = 'loss', patience=20, restore_best_weights=True)
+def precision_m(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
 
-    return early_stopping_cb
-
+def f1_m(y_true, y_pred):
+    precision = precision_m(y_true, y_pred)
+    recall = recall_m(y_true, y_pred)
+    return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
 def training_pipeline():
     '''
@@ -25,11 +40,29 @@ def training_pipeline():
     '''
     return
 
-def _aux_dataset_formatter(dataset):
-    return
+
+def _lc_dataset_formatter(dataset, local = False, train = True):
+    df = tfds.as_dataframe(dataset)
+    df['targets'] = df['targets'].str.get(0)
+    y = df['targets']
+    if local:
+        data = df['inputs/local_view'].to_numpy()
+    else:
+        data = df['inputs/global_view'].to_numpy()
+    x = np.array(list(x for x in data))
+    if train:
+        over = ADASYN(random_state=42, n_jobs=-1)
+        under = RandomUnderSampler(random_state=42)
+        steps = [('o', over), ('u', under)]
+        pipeline = Pipeline(steps=steps)
+        x, y = pipeline.fit_resample(x, y)
+
+    y = to_categorical(y)
+
+    return x, y
 
 
-def _aux_dataset_formatter(dataset):
+def _aux_dataset_formatter(dataset, train = True):
 
     df = tfds.as_dataframe(dataset)
     df['inputs/Duration'] = df['inputs/Duration'].str.get(0)
@@ -38,83 +71,111 @@ def _aux_dataset_formatter(dataset):
     df['inputs/Period'] = df['inputs/Period'].str.get(0)
     df['inputs/Transit_Depth'] = df['inputs/Transit_Depth'].str.get(0)
     df['targets'] = df['targets'].str.get(0)
-
     y = df['targets']
     x = df.drop(labels=['targets'], axis=1)
+
+    if train:
+        over = ADASYN(random_state=42, n_jobs=-1)
+        under = RandomUnderSampler(random_state=42)
+        steps = [('o', over), ('u', under)]
+        pipeline = Pipeline(steps=steps)
+        x, y = pipeline.fit_resample(x, y)
+
     y = to_categorical(y)
     return x, y
 
-def _mlp_builder(dataset, val_dataset, test_set):
+
+def _mlp_test_eval(history, model, x_train, y_train, x_test, y_test, y_pred, y_pred_train):
+
+    print(model.summary())
+    # evaluate the model
+    train_loss, train_acc = model.evaluate(x_train, y_train, verbose=0)
+    test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
+    print('Loss [Train: %.3f, Test: %.3f]' % (train_loss, test_loss))
+    print('Accuracy [Train: %.3f, Test: %.3f]' % (train_acc, test_acc))
+    print('Recall [Train: %.3f, Test: %.3f]' % (recall_m(y_train, y_pred_train),recall_m(y_test, y_pred)))
+    print('Precision [Train: %.3f, Test: %.3f]' % (precision_m(y_train, y_pred_train),precision_m(y_test, y_pred)))
+    print('F1 Score [Train: %.3f, Test: %.3f]' % (f1_m(y_train, y_pred_train),f1_m(y_test, y_pred)))
+
+def _mlp_builder(dataset, val_dataset, test_set, config):
 
     x_train, y_train = _aux_dataset_formatter(dataset)
     x_val, y_val = _aux_dataset_formatter(val_dataset)
-    x_test, y_test = _aux_dataset_formatter(test_set)
+    x_test, y_test = _aux_dataset_formatter(test_set, False)
 
     initializer = lecun_normal()
-    inputs = Input(shape=(5,), name = 'inputs')
-    x = BatchNormalization()(inputs)
-    x = Dense(512, activation='selu', name="dense_1", kernel_initializer=initializer)(x)
-    x = Dense(512, activation='selu', name="dense_2", kernel_initializer=initializer)(x)
-    x = Dense(512, activation='selu', name="dense_3", kernel_initializer=initializer)(x)
-    x = Dense(512, activation='selu', name="dense_4", kernel_initializer=initializer)(x)
-    x = Dense(512, activation='selu', name="dense_5", kernel_initializer=initializer)(x)
-    outputs = Dense(2, activation='softmax',name="predictions")(x)
+    inputs = Input(shape=(int(config.input_dim),), name = 'inputs')
+    x = BatchNormalization(momentum=0.95,epsilon=0.005,beta_initializer=RandomNormal(mean=0.0, stddev=0.05),gamma_initializer=Constant(value=0.9))(inputs)
+    for i in range(1, config.layers_num):
+        x = Dense(config.units, activation = config.activation, name = "dense_" + str(i), kernel_initializer=initializer)(x)
+    x = BatchNormalization(momentum=0.95,epsilon=0.005,beta_initializer=RandomNormal(mean=0.0, stddev=0.05),gamma_initializer=Constant(value=0.9))(x)
+    outputs = Dense(int(config.output_dim), activation=config.output_act, name="predictions")(x)
 
     model = Model(inputs=inputs, outputs=outputs)
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(amsgrad=True), metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=Adam(config.learning_rate, amsgrad=True), metrics=['accuracy'])
+    history = model.fit(x_train, y_train, epochs=100, batch_size=config.batch_size, validation_data=(x_val, y_val), validation_freq = 2, use_multiprocessing=True)
+    y_pred = model.predict(x_test)
+    y_pred_train = model.predict(x_train)
+    _mlp_test_eval(history, model, x_train, y_train, x_test, y_test, y_pred, y_pred_train)
 
-    print(model.summary())
-    early = callbacks_builder()
-    history = model.fit(x_train, y_train, epochs=100, batch_size=128, callbacks = early, validation_data=(x_val, y_val), validation_freq = 2, use_multiprocessing=True)
+    return outputs
+
+def _lc_test_eval(history, model, x_train, y_train, x_test, y_test, y_pred, y_pred_train):
+
 
     # evaluate the model
-    _, train_acc = model.evaluate(x_train, y_train, verbose=0)
-    _, test_acc = model.evaluate(x_test, y_test, verbose=0)
-    print('Train: %.3f, Test: %.3f' % (train_acc, test_acc))
-    # plot accuracy during training
-    pyplot.title('Accuracy')
-    pyplot.plot(history.history['accuracy'], label='train')
-    pyplot.plot(history.history['val_accuracy'], label='test')
-    pyplot.legend()
-    pyplot.show()
+    train_loss, train_acc = model.evaluate(x_train, y_train, verbose=0)
+    test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
+    print('Loss [Train: %.3f, Test: %.3f]' % (train_loss, test_loss))
+    print('Accuracy [Train: %.3f, Test: %.3f]' % (train_acc, test_acc))
+    print('Recall [Train: %.3f, Test: %.3f]' % (recall_m(y_train, y_pred_train),recall_m(y_test, y_pred)))
+    print('Precision [Train: %.3f, Test: %.3f]' % (precision_m(y_train, y_pred_train),precision_m(y_test, y_pred)))
+    print('F1 Score [Train: %.3f, Test: %.3f]' % (f1_m(y_train, y_pred_train),f1_m(y_test, y_pred)))
 
-    return model
-
-
-def _dcnn_builder():
+def _dcnn_builder(dataset, val_dataset, test_dataset, config, local = False):
     #? shape 1
     #? Conv1D dato che i dati sono una time series, Conv2D è ideale per immagini
     #? MaxPool
     #? Repeat conv-pool block for x times
     #? AVG POOL at the end? maybe it depends by AUC results (try max and avg)
 
-    #x_train, y_train = _lc_dataset_formatter(dataset)
-    #x_val, y_val = _lc_dataset_formatter(val_dataset)
-
-    inputs = Input(shape=(1,), name='inputs')
-    x = Conv1D(filters = 64, kernel_size = 50, activation='relu')(inputs)
-    x = MaxPool1D(pool_size= 32, strides= 32)(x)
-    x = Conv1D(filters = 64, kernel_size = 50, activation='relu')(x)
-    x = MaxPool1D(pool_size= 32, strides= 32)(x)
-    x = Conv1D(filters = 64, kernel_size = 50, activation='relu')(x)
-    x = MaxPool1D(pool_size= 32, strides= 32)(x)
-    x = Conv1D(filters = 64, kernel_size = 50, activation='relu')(x)
-    x = MaxPool1D(pool_size= 32, strides= 32)(x)
-
-    return 
+    x_train, y_train = _lc_dataset_formatter(dataset, local)
+    x_val, y_val = _lc_dataset_formatter(val_dataset, local, train = False)
+    x_test, y_test = _lc_dataset_formatter(test_dataset, local, train=False)
 
 
-def _combined_fnn_builder():
-    model = Sequential()
-    model.add(Input(shape=(6,)))
-    #? Dropout 0.10/0.25
-    model.add(Dense(512, activation='relu'))
-    model.add(Dense(512, activation='relu'))
-    model.add(Dense(512, activation='relu'))
-    model.add(Dense(512, activation='relu'))
-    model.add(Dense(3, activation='softmax'))
+    inputs = Input(shape=(int(config.input_dim),), name='inputs')
+    net = tf.expand_dims(inputs, -1)
+    initializer = lecun_normal()
 
-    return
+    x = BatchNormalization(momentum=0.95,epsilon=0.005,beta_initializer=RandomNormal(mean=0.0, stddev=0.05),gamma_initializer=Constant(value=0.9))(net)
+    for i in range(config.layers_num):
+        num_filters = int(config.num_filters)
+        for j in range(3):
+            x = Conv1D(filters=num_filters, kernel_size=int(config.kernel), padding=config.padding, activation=str(config.activation), kernel_initializer=initializer)(x)
+        x = MaxPool1D(pool_size=int(config.pool), strides=int(config.stride))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(config.dropout_cnn)(x)
+    x = Flatten()(x)
+    x = BatchNormalization(momentum=0.95,epsilon=0.005,beta_initializer=RandomNormal(mean=0.0, stddev=0.05),gamma_initializer=Constant(value=0.9))(x)
+    for i in range(config.fc_layers_num):
+        x = Dense(config.fc_units, activation=config.activation, kernel_initializer=initializer)(x)
+
+    outputs = Dense(int(config.output_dim), activation=config.output_act, name="predictions")(x)
+
+    model = Model(inputs=inputs, outputs=outputs)
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(config.learning_rate, amsgrad=True), metrics=['accuracy'])
+    print(model.summary())
+    history = model.fit(x_train, y_train, batch_size = 64, epochs=50, validation_data = (x_val, y_val), use_multiprocessing=True)
+    y_pred_train = model.predict(x_train)
+    y_pred = model.predict(x_test)
+
+    _lc_test_eval(history, model, x_train, y_train, x_test, y_test, y_pred, y_pred_train)
+    return outputs
+
+
+def _combined_fnn_builder(mlp, dcnn):
+    models = mlp
 
 
 def model_builder():
@@ -171,8 +232,10 @@ def model_builder():
 
     return #modello1, modello2, modello3, modello4
 
-def _test_build(lc_train_dataset, aux_train_dataset, lc_valid_dataset, aux_valid_dataset, lc_test_dataset, aux_test_dataset, data_type):
-    _mlp_builder(aux_train_dataset,aux_valid_dataset, aux_test_dataset)
+def _test_build(local, lc_train_dataset, aux_train_dataset, lc_valid_dataset, aux_valid_dataset, lc_test_dataset, aux_test_dataset, config_mlp, config_cnn):
+   # mlp = _mlp_builder(aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_mlp)
+    dcnn = _dcnn_builder(lc_train_dataset, lc_valid_dataset, lc_test_dataset, config_cnn, local)
+    #_combined_fnn_builder(mlp, dcnn)
     return
 
 if __name__ == '__main__':

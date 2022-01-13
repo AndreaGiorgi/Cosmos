@@ -119,26 +119,6 @@ def load_lightcurve(tic, sector):
     return lc_processing(lc_time, lc_flux)
 
 
-def load_new_data_lightcurve(tic, sector):
-    """Load the lightcurve from a single tic identifier and its respective sector
-
-    Args:
-        tic: TESS Identifier
-        sector: observed sector
-
-    Returns:
-        all_time: processed time data
-        all_flux: processed flux data
-    """
-    lightcurve_astroTable = etl_coordinator.start_new_data_ingestion_phase(tic, sector)
-    if not lightcurve_astroTable:
-      print("failed to download {tic} fits file".format(tic))
-      raise IOError
-    lc_time, lc_flux = etl_coordinator.start_new_data_loading_phase(lightcurve_astroTable)
-
-    return lc_processing(lc_time, lc_flux)
-
-
 def phase_fold(time, flux, period, t0):
 
     time = lightcurve_utilities.phase_fold_algorithm(time, period, t0)

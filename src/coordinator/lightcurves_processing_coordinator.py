@@ -86,10 +86,10 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     tce_table = tce_table.iloc[np.random.permutation(num_transits)] # SLower than sklearn.shuffle but it now doesn't need to reset the index
 
     ##* TCE Partions:
-    #* Training set: 90% of TCEs
-    #* Validation set: 10% of TCEs
+    #* Training set: 95% of TCEs
+    #* Validation set: 5% of TCEs
 
-    train_portion = int(0.90 * num_transits)
+    train_portion = int(0.95 * num_transits)
     training_TCEs = tce_table[0:train_portion]
     validation_TCEs = tce_table[train_portion:]
 

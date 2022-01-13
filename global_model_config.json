@@ -2,7 +2,7 @@
 	"inputs": {
 		"features": {
 			"global_view": {
-				"length": 201,
+				"length": 402,
 				"is_time_series": 1
 			},
 			"Duration": {
@@ -52,7 +52,7 @@
 
 	},
 	"cnn_net":{
-		"input_dim": 201,
+		"input_dim": 402,
 		"output_dim": 2,
 		"batch_size": 64,
 		"learning_rate": 1e-6,

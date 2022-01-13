@@ -31,7 +31,7 @@ def generate_view(time, flux, num_bins, bin_width, t_min, t_max, normalize=True)
   return view
 
 
-def global_view(time, flux, period, num_bins=201, bin_width_factor=1.2/201):
+def global_view(time, flux, period, num_bins=402, bin_width_factor=1.2/201):
     """
     Args:
         time: 1D array of time values, sorted in ascending order.

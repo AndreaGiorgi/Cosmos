@@ -7,7 +7,7 @@ from imblearn.under_sampling import RandomUnderSampler
 from imblearn.pipeline import Pipeline
 from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import Dense, BatchNormalization, Dropout, Conv1D, MaxPool1D, Flatten
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, Adadelta, SGD
 from tensorflow.keras.initializers import lecun_normal, RandomNormal, Constant
 from tensorflow.keras.utils import to_categorical
 from matplotlib import pyplot
@@ -112,7 +112,7 @@ def _mlp_builder(dataset, val_dataset, test_set, config):
     outputs = Dense(int(config.output_dim), activation=config.output_act, name="predictions")(x)
 
     model = Model(inputs=inputs, outputs=outputs)
-    model.compile(loss='binary_crossentropy', optimizer=Adam(config.learning_rate, amsgrad=True), metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True), metrics=['accuracy'])
     history = model.fit(x_train, y_train, epochs=100, batch_size=config.batch_size, validation_data=(x_val, y_val), validation_freq = 2, use_multiprocessing=True)
     y_pred = model.predict(x_test)
     y_pred_train = model.predict(x_train)
@@ -164,7 +164,7 @@ def _dcnn_builder(dataset, val_dataset, test_dataset, config, local = False):
     outputs = Dense(int(config.output_dim), activation=config.output_act, name="predictions")(x)
 
     model = Model(inputs=inputs, outputs=outputs)
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(config.learning_rate, amsgrad=True), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True), metrics=['accuracy'])
     print(model.summary())
     history = model.fit(x_train, y_train, batch_size = 64, epochs=50, validation_data = (x_val, y_val), use_multiprocessing=True)
     y_pred_train = model.predict(x_train)

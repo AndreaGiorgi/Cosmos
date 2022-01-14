@@ -1,8 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from keras import backend as K
-from sklearn.preprocessing import StandardScaler
-from imblearn.over_sampling import ADASYN
+from imblearn.over_sampling import ADASYN, SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.pipeline import Pipeline
 from tensorflow.keras import Model, Input
@@ -51,7 +50,7 @@ def _lc_dataset_formatter(dataset, local = False, train = True):
         data = df['inputs/global_view'].to_numpy()
     x = np.array(list(x for x in data))
     if train:
-        over = ADASYN(random_state=42, n_jobs=-1)
+        over = SMOTE(random_state=42, n_jobs=-1)
         under = RandomUnderSampler(random_state=42)
         steps = [('o', over), ('u', under)]
         pipeline = Pipeline(steps=steps)

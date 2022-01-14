@@ -1,15 +1,14 @@
 import pandas as pd
-import numpy as np
 
 def preprocess_tce(tce_table):
 
     tce_table = tce_table.drop_duplicates(subset=['tic_id'], keep = "first")
-    tce_table = tce_table.dropna()
     tce_table = tce_table[tce_table['Transit_Depth'] > 0]
     tce_table["Duration"] /= 24  # Convert hours to days.
     tce_table['Disposition'] = tce_table['Disposition'].replace({'IS': 'J', 'V': 'O'}) #Reduce classification labels [Instrumental Noise -> Junk, Variable Star -> Others]
     #? Disposition rimaste: [Planet Candidate PC (1), Eclipsing Binary EB (0), Junk J (0), Other O (0)]
     #tce_table = tce_table.append([tce_table[tce_table['Disposition'] == 'PC']] * 3, ignore_index=True) #? Introduciamo rindondaza che dovrebbe aumentare i casi positivi
+    tce_table = tce_table.dropna()
     print(tce_table.info())
     return tce_table
 

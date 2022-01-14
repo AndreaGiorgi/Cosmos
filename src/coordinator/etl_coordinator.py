@@ -1,5 +1,3 @@
-# TODO: SPIEGA STO CAZZO DI ACCROCCO
-
 import os, sys, psutil, time, pandas as pd
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)

@@ -7,9 +7,14 @@ import glob as g
 import random
 import tensorflow as tf
 import numpy as np
-from neural_network_util import TFRecords_util, dataset_postprocess
+from neural_network_util import TFRecords_util
 AUTOTUNE = tf.data.AUTOTUNE
 
+def data_map(data_type_as_string):
+    if data_type_as_string == 0:
+        return np.float32
+    else:
+        return np.int64
 
 def dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, training = True):
     lc_dataset = lc_dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, training)
@@ -35,7 +40,7 @@ def aux_dataset_builder(tfrecords, folder, config, shuffle_buffer, training):
             #? Parses a tensorflow example into a special dict-like structure [feature_name, specs] where feature_name is the key and specs are the values
 
             fields = {
-                feature_name: tf.io.FixedLenFeature([feature.length], tf.float32)
+                feature_name: tf.io.FixedLenFeature([feature.length], data_map(feature.data_type))
                 for feature_name, feature in config.features.items()
             }
 

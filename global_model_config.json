@@ -3,26 +3,32 @@
 		"features": {
 			"global_view": {
 				"length": 402,
+				"data_type": 0,
 				"is_time_series": 1
 			},
 			"Duration": {
 				"length": 1,
+				"data_type": 0,
 				"is_time_series": 0
 			},
 			"Epoc": {
 				"length": 1,
+				"data_type": 0,
 				"is_time_series": 0
 			},
 			"Period": {
 				"length": 1,
+				"data_type": 0,
 				"is_time_series": 0
 			},
 			"Tmag": {
 				"length": 1,
+				"data_type": 0,
 				"is_time_series": 0
 			},
 			"Transit_Depth": {
 				"length": 1,
+				"data_type": 0,
 				"is_time_series": 0
 			}
 		},
@@ -38,6 +44,10 @@
 			"EB": 0,
 			"O": 0,
 			"J": 0
+		},
+		"data_map": {
+			"np.float32": 0,
+			"np.int64": 1
 		}
 	},
 	"mlp_net": {
@@ -58,7 +68,7 @@
 		"learning_rate": 1e-6,
 		"activation": "selu",
 		"output_act": "softmax",
-		"fc_units": 512,
+		"fc_units": 256,
 		"num_filters": 32,
 		"padding": "same",
 		"kernel": 3,

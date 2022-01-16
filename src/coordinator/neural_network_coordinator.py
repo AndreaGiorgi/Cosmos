@@ -40,7 +40,7 @@ def training_session(json_config, training_files, validation_files, test_files, 
     cosmos_model =  model_initializer._test_build(local, lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
                                                         lc_test_dataset, aux_test_dataset, model_config.mlp_net, model_config.cnn_net) #return a cosmos model using json hparams
 
-    #cosmos_cnn.train(training_tensors, validation_tensors, max_epochs = 5000)
+    cosmos_cnn.train(training_tensors, validation_tensors, max_epochs = 5000)
 
     return True
 

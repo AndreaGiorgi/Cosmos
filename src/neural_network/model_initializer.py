@@ -34,11 +34,6 @@ def _mlp_builder(config):
     return model
 
 def _dcnn_builder(config):
-    #? shape 1
-    #? Conv1D dato che i dati sono una time series, Conv2D è ideale per immagini
-    #? MaxPool
-    #? Repeat conv-pool block for x times
-    #? AVG POOL at the end? maybe it depends by AUC results (try max and avg)
 
     inputs = Input(shape=(int(config.input_dim),), name='inputs')
     net = tf.expand_dims(inputs, -1)
@@ -67,7 +62,6 @@ def _dcnn_builder(config):
 
 def _combined_fnn_builder(mlp, dcnn):
     models = mlp
-
 
 
 def model_evaluation(model_type, dataset, val_dataset, test_dataset, config):

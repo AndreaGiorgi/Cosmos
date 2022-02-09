@@ -1,106 +1,24 @@
 import tensorflow as tf
 import numpy as np
-from keras import backend as K
-from imblearn.over_sampling import ADASYN, SMOTE
-from imblearn.under_sampling import RandomUnderSampler
-from imblearn.pipeline import Pipeline
+
 from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import Dense, BatchNormalization, Dropout, Conv1D, MaxPool1D, Flatten
-from tensorflow.keras.optimizers import Adam, Adadelta, SGD
+from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.initializers import lecun_normal, RandomNormal, Constant
-from tensorflow.keras.utils import to_categorical
+import sklearn
 from matplotlib import pyplot
-from sklearn.metrics import classification_report
-import tensorflow_datasets as tfds
 
-def recall_m(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-    return recall
-
-def precision_m(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    precision = true_positives / (predicted_positives + K.epsilon())
-    return precision
-
-def f1_m(y_true, y_pred):
-    precision = precision_m(y_true, y_pred)
-    recall = recall_m(y_true, y_pred)
-    return 2*((precision*recall)/(precision+recall+K.epsilon()))
-
-def training_pipeline():
-    '''
-    Step 1: Addestra il modello Cosmos_DNN
-    Step 2: Addestra il modello Cosmos_MLP_FC
-    Step 3: "Addestra" il modello Cosmos_Combined_Layer
-    Step 4: Addestra il modello Cosmos_Combined_FNN e ritorna
-    '''
-    return
-
-
-def _lc_dataset_formatter(dataset, local = False, train = True):
-    df = tfds.as_dataframe(dataset)
-    df['targets'] = df['targets'].str.get(0)
-    y = df['targets']
-    if local:
-        data = df['inputs/local_view'].to_numpy()
-    else:
-        data = df['inputs/global_view'].to_numpy()
-    x = np.array(list(x for x in data))
-    if train:
-        over = SMOTE(random_state=42, n_jobs=-1)
-        under = RandomUnderSampler(random_state=42)
-        steps = [('o', over), ('u', under)]
-        pipeline = Pipeline(steps=steps)
-        x, y = pipeline.fit_resample(x, y)
-
-    y = to_categorical(y)
-
-    return x, y
-
-
-def _aux_dataset_formatter(dataset, train = True):
-
-    df = tfds.as_dataframe(dataset)
-    df['inputs/Duration'] = df['inputs/Duration'].str.get(0)
-    df['inputs/Epoc'] = df['inputs/Epoc'].str.get(0)
-    df['inputs/Tmag'] = df['inputs/Tmag'].str.get(0)
-    df['inputs/Period'] = df['inputs/Period'].str.get(0)
-    df['inputs/Transit_Depth'] = df['inputs/Transit_Depth'].str.get(0)
-    df['targets'] = df['targets'].str.get(0)
-    y = df['targets']
-    x = df.drop(labels=['targets'], axis=1)
-
-    if train:
-        over = ADASYN(random_state=42, n_jobs=-1)
-        under = RandomUnderSampler(random_state=42)
-        steps = [('o', over), ('u', under)]
-        pipeline = Pipeline(steps=steps)
-        x, y = pipeline.fit_resample(x, y)
-
-    y = to_categorical(y)
-    return x, y
-
+from neural_network_util import dataset_postprocess
 
 def _mlp_test_eval(history, model, x_train, y_train, x_test, y_test, y_pred, y_pred_train):
 
-    print(model.summary())
-    # evaluate the model
-    train_loss, train_acc = model.evaluate(x_train, y_train, verbose=0)
-    test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
-    print('Loss [Train: %.3f, Test: %.3f]' % (train_loss, test_loss))
-    print('Accuracy [Train: %.3f, Test: %.3f]' % (train_acc, test_acc))
-    print('Recall [Train: %.3f, Test: %.3f]' % (recall_m(y_train, y_pred_train),recall_m(y_test, y_pred)))
-    print('Precision [Train: %.3f, Test: %.3f]' % (precision_m(y_train, y_pred_train),precision_m(y_test, y_pred)))
-    print('F1 Score [Train: %.3f, Test: %.3f]' % (f1_m(y_train, y_pred_train),f1_m(y_test, y_pred)))
+    #results = list()
+    #results.append(scores)
+    #pyplot.boxplot(results, labels=[str(r) for r in repeats], showmeans=True)
+    #pyplot.show()
+    return
 
-def _mlp_builder(dataset, val_dataset, test_set, config):
-
-    x_train, y_train = _aux_dataset_formatter(dataset)
-    x_val, y_val = _aux_dataset_formatter(val_dataset)
-    x_test, y_test = _aux_dataset_formatter(test_set, False)
+def _mlp_builder(config):
 
     initializer = lecun_normal()
     inputs = Input(shape=(int(config.input_dim),), name = 'inputs')
@@ -112,36 +30,15 @@ def _mlp_builder(dataset, val_dataset, test_set, config):
 
     model = Model(inputs=inputs, outputs=outputs)
     model.compile(loss='binary_crossentropy', optimizer=SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True), metrics=['accuracy'])
-    history = model.fit(x_train, y_train, epochs=100, batch_size=config.batch_size, validation_data=(x_val, y_val), validation_freq = 2, use_multiprocessing=True)
-    y_pred = model.predict(x_test)
-    y_pred_train = model.predict(x_train)
-    _mlp_test_eval(history, model, x_train, y_train, x_test, y_test, y_pred, y_pred_train)
 
-    return outputs
+    return model
 
-def _lc_test_eval(history, model, x_train, y_train, x_test, y_test, y_pred, y_pred_train):
-
-
-    # evaluate the model
-    train_loss, train_acc = model.evaluate(x_train, y_train, verbose=0)
-    test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
-    print('Loss [Train: %.3f, Test: %.3f]' % (train_loss, test_loss))
-    print('Accuracy [Train: %.3f, Test: %.3f]' % (train_acc, test_acc))
-    print('Recall [Train: %.3f, Test: %.3f]' % (recall_m(y_train, y_pred_train),recall_m(y_test, y_pred)))
-    print('Precision [Train: %.3f, Test: %.3f]' % (precision_m(y_train, y_pred_train),precision_m(y_test, y_pred)))
-    print('F1 Score [Train: %.3f, Test: %.3f]' % (f1_m(y_train, y_pred_train),f1_m(y_test, y_pred)))
-
-def _dcnn_builder(dataset, val_dataset, test_dataset, config, local = False):
+def _dcnn_builder(config):
     #? shape 1
     #? Conv1D dato che i dati sono una time series, Conv2D è ideale per immagini
     #? MaxPool
     #? Repeat conv-pool block for x times
     #? AVG POOL at the end? maybe it depends by AUC results (try max and avg)
-
-    x_train, y_train = _lc_dataset_formatter(dataset, local)
-    x_val, y_val = _lc_dataset_formatter(val_dataset, local, train = False)
-    x_test, y_test = _lc_dataset_formatter(test_dataset, local, train=False)
-
 
     inputs = Input(shape=(int(config.input_dim),), name='inputs')
     net = tf.expand_dims(inputs, -1)
@@ -164,20 +61,62 @@ def _dcnn_builder(dataset, val_dataset, test_dataset, config, local = False):
 
     model = Model(inputs=inputs, outputs=outputs)
     model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True), metrics=['accuracy'])
-    print(model.summary())
-    history = model.fit(x_train, y_train, batch_size = 64, epochs=50, validation_data = (x_val, y_val), use_multiprocessing=True)
-    y_pred_train = model.predict(x_train)
-    y_pred = model.predict(x_test)
 
-    _lc_test_eval(history, model, x_train, y_train, x_test, y_test, y_pred, y_pred_train)
-    return outputs
+    return model
 
 
 def _combined_fnn_builder(mlp, dcnn):
     models = mlp
 
 
+
+def model_evaluation(model_type, dataset, val_dataset, test_dataset, config):
+
+    if model_type == 'cnn':
+        x_train, y_train = dataset_postprocess._lc_dataset_formatter(dataset)
+        x_val, y_val = dataset_postprocess._lc_dataset_formatter(val_dataset, train = False)
+        x_test, y_test = dataset_postprocess._lc_dataset_formatter(test_dataset, train=False)
+    else:
+        x_train, y_train = dataset_postprocess._aux_dataset_formatter(dataset)
+        x_val, y_val = dataset_postprocess._aux_dataset_formatter(val_dataset)
+        x_test, y_test = dataset_postprocess._aux_dataset_formatter(test_dataset, False)
+
+    cv_inputs = np.concatenate((x_train, x_test, x_val), axis = 0)
+    cv_targets = np.concatenate((y_train, y_test, y_val), axis = 0)
+
+    acc_per_fold = []
+    loss_per_fold = []
+    kfold =  sklearn.model_selection.KFold(n_splits = 10, shuffle = True)
+    for train, test in kfold.split(cv_inputs, cv_targets):
+        model = None
+        if model_type == 'cnn':
+            model = _dcnn_builder(config)
+        else:
+            model = _mlp_builder(config)
+
+        history = model.fit(cv_inputs[train], cv_targets[train],
+              batch_size=config.batch_size,
+              epochs=100,
+              use_multiprocessing=True)
+
+        scores = model.evaluate(cv_inputs[test], cv_targets[test], verbose=0)
+        acc_per_fold.append(scores[1] * 100)
+        loss_per_fold.append(scores[0])
+
+    print('------------------------------------------------------------------------')
+    print('Score per fold')
+    for i in range(0, len(acc_per_fold)):
+        print('------------------------------------------------------------------------')
+        print(f'> Fold {i+1} - Loss: {loss_per_fold[i]} - Accuracy: {acc_per_fold[i]}%')
+        print('------------------------------------------------------------------------')
+        print('Average scores for all folds:')
+        print(f'> Accuracy: {np.mean(acc_per_fold)} (+- {np.std(acc_per_fold)})')
+        print(f'> Loss: {np.mean(loss_per_fold)}')
+        print('------------------------------------------------------------------------')
+
 def model_builder():
+
+
     '''
     Coordina la costruzione dei quattro modelli che compongono il cuore dell'archiettura di cosmos.
     Rete 1: Cosmos_DCNN
@@ -213,10 +152,14 @@ def model_builder():
         Utilizza le global/local view tramite un addestramento convoluzionale.
     '''
 
+    cosmos_dcnn = _dcnn_builder()
+
     '''
     Rete 2: Cosmos_MLP_FC
         Utilizza e sfrutta i dati secondari presenti all'ìnterno del TCE, ossia quelli categorici/numerici non direttamente connessi alle global\local view.
     '''
+
+    cosmos_ann = _mlp_builder()
 
     '''
     Rete 3: Cosmos_Combined_Layer
@@ -232,8 +175,8 @@ def model_builder():
     return #modello1, modello2, modello3, modello4
 
 def _test_build(local, lc_train_dataset, aux_train_dataset, lc_valid_dataset, aux_valid_dataset, lc_test_dataset, aux_test_dataset, config_mlp, config_cnn):
-   # mlp = _mlp_builder(aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_mlp)
-    dcnn = _dcnn_builder(lc_train_dataset, lc_valid_dataset, lc_test_dataset, config_cnn, local)
+    mlp = model_evaluation('mlp', aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_mlp)
+    dcnn = model_evaluation('cnn', lc_train_dataset, lc_valid_dataset, lc_test_dataset, config_cnn)
     #_combined_fnn_builder(mlp, dcnn)
     return
 

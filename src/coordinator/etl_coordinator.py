@@ -45,12 +45,5 @@ def start_loading_phase(fits):
     return lc_time, lc_flux
 
 
-@track
-def start_test_data_loading_phase(fits):
-    print("Loading new fits data\n")
-    lc_time, lc_flux = etl_loading.load_lightcurve_data(fits)
-    return lc_time, lc_flux
-
-
 if __name__ == '__main__':
     start_ingestion_phase(114990015, 1)

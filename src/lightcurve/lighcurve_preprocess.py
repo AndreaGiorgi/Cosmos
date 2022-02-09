@@ -123,7 +123,6 @@ def phase_fold(time, flux, period, t0):
 
     time = lightcurve_utilities.phase_fold_algorithm(time, period, t0)
 
-    # Sort by ascending time
     sorted_element = np.argsort(time)
     time = time[sorted_element]
     flux = flux[sorted_element]

@@ -31,7 +31,7 @@ def track(func):
 
 
 @track
-def training_session(json_config, training_files, validation_files, test_files, local):
+def model_build_evaluation(json_config, training_files, validation_files, test_files, local):
 
     model_config = model_util.load_config(json_config) # return config dictionary
     lc_training_dataset, aux_training_dataset = dataset_builder.dataset_builder(training_files, model_config.folder, model_config.inputs, 0.5, 500)
@@ -40,8 +40,7 @@ def training_session(json_config, training_files, validation_files, test_files, 
     cosmos_model =  model_initializer._test_build(local, lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
                                                         lc_test_dataset, aux_test_dataset, model_config.mlp_net, model_config.cnn_net) #return a cosmos model using json hparams
 
-    return True
 
 
 if __name__=='__main__':
-    training_session('global_model_config.json', 'training_set', 'val', 'test', False)
+    model_build_evaluation('global_model_config.json', 'training_set', 'val', 'test', False)

@@ -91,19 +91,6 @@ def test_data_pipeline():
     lightcurves_processing_coordinator.main_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, NAMESPACE.shards, workers, NAMESPACE.only_local)
     return True
 
-
-@track
-def cosmos_training_pipeline():
-    # neural_network_coordinator.training_session(#TODO json_path, training_files_path, validation_files_path, model_path)
-    return True
-
-
-@track
-def cosmos_prediction_pipeline():
-    # neural_network_coordinator.prediction_session(#TODO json_path, training_files_path, validation_files_path, model_path)
-    return True
-
-
 def main():
     if NAMESPACE.test:
         test_data_pipeline()

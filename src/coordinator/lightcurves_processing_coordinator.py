@@ -6,7 +6,6 @@ sys.path.append(parentdir)
 
 import multiprocessing
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 import psutil, time
 from lightcurve import lightcurve_multiprocessing, lightcurve_tce

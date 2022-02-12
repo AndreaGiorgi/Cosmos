@@ -41,6 +41,5 @@ def model_build_evaluation(json_config, training_files, validation_files, test_f
                                                         lc_test_dataset, aux_test_dataset, model_config.mlp_net, model_config.cnn_net) #return a cosmos model using json hparams
 
 
-
 if __name__=='__main__':
     model_build_evaluation('global_model_config.json', 'training_set', 'val', 'test', False)

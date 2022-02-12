@@ -58,6 +58,7 @@
 		"activation": "selu",
 		"output_act": "softmax",
 		"layers_num": 5,
+		"dropout_fc": 0.3,
 		"units": 256
 
 	},
@@ -76,7 +77,7 @@
 		"stride": 1,
 		"layers_num": 5,
 		"fc_layers_num": 2,
-		"dropout_cnn": 0.25,
+		"dropout_cnn": 0.20,
 		"dropout_fc": 0.5
 
 	},

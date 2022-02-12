@@ -37,7 +37,7 @@ def model_build_evaluation(json_config, training_files, validation_files, test_f
     lc_training_dataset, aux_training_dataset = dataset_builder.dataset_builder(training_files, model_config.folder, model_config.inputs, 0.5, 500)
     lc_validation_dataset, aux_validation_dataset = dataset_builder.dataset_builder(validation_files, model_config.folder, model_config.inputs, 0.5, 500, False)
     lc_test_dataset, aux_test_dataset = dataset_builder.dataset_builder( test_files, model_config.folder, model_config.inputs, 0.5, 500, False)
-    cosmos_model =  model_initializer._test_build(local, lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
+    model_initializer._test_build(local, lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
                                                         lc_test_dataset, aux_test_dataset, model_config.mlp_net, model_config.cnn_net) #return a cosmos model using json hparams
 
 

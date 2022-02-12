@@ -79,7 +79,7 @@ def model_kfold_evaluation(model_type, model, dataset, val_dataset, test_dataset
         fold_model = original_model
         _ = fold_model.fit(cv_inputs[train], cv_targets[train],
               batch_size=config.batch_size,
-              epochs=1,
+              epochs=25,
               use_multiprocessing=True)
 
         scores = fold_model.evaluate(cv_inputs[test], cv_targets[test], verbose=0)

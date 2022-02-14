@@ -1,4 +1,3 @@
-# TODO: SPIEGA STO CAZZO DI ACCROCCO
 
 #!/usr/bin/python
 
@@ -8,8 +7,8 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import psutil, argparse, time
-from coordinator import etl_coordinator, lightcurves_processing_coordinator, neural_network_coordinator
+import psutil, time
+from coordinator import etl_coordinator, lightcurves_processing_coordinator, coordinator_config
 
 def get_process_memory():
     process = psutil.Process(os.getpid())
@@ -29,42 +28,6 @@ def track(func):
         return result
     return wrapper
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument(
-    "--tce_csv",
-    type=str,
-    required=True,
-    help="CSV file containing the TESS TCE table. Must contain "
-    "columns: row_id, tic_id, toi_id, Period, Duration, "
-    "Epoc (t0).")
-
-parser.add_argument(
-    "--test",
-    action='store_true',
-    default=False,
-    help="Test pipeline ops")
-
-parser.add_argument(
-    "--output_directory",
-    type=str,
-    required=True,
-    help="Directory in which to save the output.")
-
-parser.add_argument(
-    "--shards",
-    type=int,
-    default=10,
-    help="Number of file shards to divide the training set into.")
-
-parser.add_argument(
-    "--only_local",
-    action='store_true',
-    default=False,
-    help="Generate just lightcurve local view rather than global and local ones?")
-
-NAMESPACE, unparsed = parser.parse_known_args()
-
 
 def multiprocess_params_util():
     avaiable_workers = psutil.cpu_count(logical=True)
@@ -75,27 +38,28 @@ def multiprocess_params_util():
 
 
 @track
-def training_data_pipeline():
+def training_data_pipeline(config):
     workers = multiprocess_params_util()
     for i in range(1,5):
         sector = str(i)
         etl_coordinator.etl_ingestion.create_sector_folder(sector = sector)
-    lightcurves_processing_coordinator.main_train_val_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, NAMESPACE.shards, workers, NAMESPACE.only_local)
+    lightcurves_processing_coordinator.main_train_val_test_set(config.tce_csv, config.output_directory, config.shards, workers, config.only_local)
     return True
 
 
 @track
-def test_data_pipeline():
+def test_data_pipeline(config):
     workers = multiprocess_params_util()
     etl_coordinator.etl_ingestion.create_sector_folder(sector = 5)
-    lightcurves_processing_coordinator.main_test_set(NAMESPACE.tce_csv, NAMESPACE.output_directory, NAMESPACE.shards, workers, NAMESPACE.only_local)
+    lightcurves_processing_coordinator.main_test_set(config.tce_csv, config.output_directory, config.shards, workers, config.only_local)
     return True
 
 def main():
-    if NAMESPACE.test:
-        test_data_pipeline()
+    config = coordinator_config.load_config('F:\\Cosmos\\Cosmos\\ETL_config.json')
+    if config.test == 1:
+        test_data_pipeline(config)
     else:
-        training_data_pipeline()
+        training_data_pipeline(config)
 
 if __name__ == '__main__':
     main()

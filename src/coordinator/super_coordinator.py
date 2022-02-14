@@ -56,10 +56,10 @@ def test_data_pipeline(config):
 
 def main():
     config = coordinator_config.load_config('F:\\Cosmos\\Cosmos\\ETL_config.json')
-    if config.test == 1:
-        test_data_pipeline(config)
+    if config.etl.test == 1:
+        test_data_pipeline(config.etl)
     else:
-        training_data_pipeline(config)
+        training_data_pipeline(config.etl)
 
 if __name__ == '__main__':
     main()

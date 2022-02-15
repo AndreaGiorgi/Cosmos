@@ -34,7 +34,7 @@ def _dcnn_builder(config):
     x = BatchNormalization(momentum=0.95,epsilon=0.005,beta_initializer=RandomNormal(mean=0.0, stddev=0.05),gamma_initializer=Constant(value=0.9))(net)
     for i in range(config.layers_num):
         num_filters = int(config.num_filters)
-        for _ in range(1):
+        for _ in range(2):
             x = Conv1D(filters=num_filters, kernel_size=int(config.kernel), padding=config.padding, activation=str(config.activation), kernel_initializer=initializer)(x)
         x = MaxPool1D(pool_size=int(config.pool),  name = "MaxPool_" + str(i), strides=int(config.stride))(x)
         x = Dropout(config.dropout_cnn)(x)

@@ -7,7 +7,7 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-from neural_network_util import dataset_builder, model_util
+from neural_network_util import config_util, dataset_builder
 from neural_network import model_initializer
 
 def get_process_memory():
@@ -31,9 +31,9 @@ def track(func):
 
 
 @track
-def model_build_evaluation(json_config, training_files, validation_files, test_files, local):
+def model_build_evaluation(json_config = 'global_model_config.json', training_files = 'training_set', validation_files = 'val', test_files = 'test', local = False):
 
-    model_config = model_util.load_config(json_config) # return config dictionary
+    model_config = config_util.load_config(json_config) # return config dictionary
     lc_training_dataset, aux_training_dataset = dataset_builder.dataset_builder(training_files, model_config.folder, model_config.inputs, 0.5, 500)
     lc_validation_dataset, aux_validation_dataset = dataset_builder.dataset_builder(validation_files, model_config.folder, model_config.inputs, 0.5, 500, False)
     lc_test_dataset, aux_test_dataset = dataset_builder.dataset_builder( test_files, model_config.folder, model_config.inputs, 0.5, 500, False)

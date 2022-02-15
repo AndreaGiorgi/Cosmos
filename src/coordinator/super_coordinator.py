@@ -1,4 +1,3 @@
-
 #!/usr/bin/python
 
 #Permette di inserire all'interno del path il programma

@@ -1,5 +1,5 @@
 import json
-from neural_network_util.model_util import ConfigDict
+from neural_network_util.config_util import ConfigDict
 
 
 def load_config(config_path):

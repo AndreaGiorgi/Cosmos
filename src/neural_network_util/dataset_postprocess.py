@@ -60,6 +60,7 @@ def hybrid_dataset_formatter(type, dataset):
 
 
 def _lc_dataset_formatter(dataset, train = True):
+
     df = tfds.as_dataframe(dataset)
     df.sample(n=len(df), random_state=0)
     df['targets'] = df['targets'].str.get(0)
@@ -89,7 +90,7 @@ def _aux_dataset_formatter(dataset, train = True):
     df['targets'] = df['targets'].str.get(0)
 
     y = df['targets']
-    x = df.drop(labels=['targets'], axis=1)
+    x = df.drop(labels=['tic_id', 'targets'], axis=1)
 
     if train:
         over = ADASYN(random_state=42, n_jobs=-1)

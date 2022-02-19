@@ -16,12 +16,12 @@ def _fnn_builder(config):
     x = BatchNormalization(momentum=0.95,epsilon=0.005,beta_initializer=RandomNormal(mean=0.0, stddev=0.05),gamma_initializer=Constant(value=0.9))(fnn_inputs)
     for i in range(1, config.layers_num):
         x = Dense(config.units, activation = config.activation, name = "fnn_dense_" + str(i), kernel_initializer=initializer)(x)
-    x = Dropout(0.3)(x)
+        x = Dropout(0.25)(x)
     x = BatchNormalization(momentum=0.95,epsilon=0.005,beta_initializer=RandomNormal(mean=0.0, stddev=0.05),gamma_initializer=Constant(value=0.9))(x)
     outputs = Dense(int(config.output_dim), activation=config.output_act, name="predictions")(x)
 
     model = Model(inputs=fnn_inputs, outputs=outputs)
-    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.SGD(learning_rate=1e-3, decay=1e-6, momentum=0.9, nesterov=True), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Nadam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07), metrics=['accuracy'])
     ct = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     plot_model(model, show_shapes=True, to_file='F:\Cosmos\Cosmos\src\model_checkpoint\cosmos_fnn.png')
     return model, fnn_inputs, x
@@ -137,9 +137,9 @@ def _test_build(local, lc_train_dataset, aux_train_dataset, lc_valid_dataset, au
     model_fnn, fnn_inputs, fnn_last_layer = _fnn_builder(config_fnn)
     model_cnn, cnn_inputs, cnn_last_layer = _dcnn_builder(config_cnn)
     combined_model = _combined_fnn_builder(fnn_last_layer, cnn_last_layer, fnn_inputs, cnn_inputs, config_fnn)
-    #model_kfold_evaluation('fnn', model_fnn, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_fnn)
+    model_kfold_evaluation('fnn', model_fnn, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_fnn)
     #model_kfold_evaluation('cnn', model_cnn, lc_train_dataset, lc_valid_dataset, lc_test_dataset, config_cnn)
-    hybrid_kfold_evaluation(combined_model, lc_train_dataset, lc_valid_dataset, lc_test_dataset, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_cnn)
+    #hybrid_kfold_evaluation(combined_model, lc_train_dataset, lc_valid_dataset, lc_test_dataset, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_cnn)
 
     return True
 

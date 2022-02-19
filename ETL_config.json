@@ -3,7 +3,6 @@
       "tce_csv":"F:\\Cosmos\\Cosmos\\tces.csv",
       "tce_test_csv":"F:\\Cosmos\\Cosmos\\test_tces.csv",
       "test":0,
-      "local":0,
       "shards":5,
       "output_directory":"F:\\Cosmos\\Cosmos\\src\\TFRecords_global"
    }

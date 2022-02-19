@@ -1,13 +1,12 @@
 import os
 import sys
-import psutil
-import time
-
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-from neural_network_util import config_util, dataset_builder
+import psutil
+import time
+from neural_network_util import config_util, dataset_builder, dataset_postprocess
 from neural_network import model_initializer
 
 def get_process_memory():
@@ -31,15 +30,34 @@ def track(func):
 
 
 @track
+def hybrid_dataset_formatter_init(type, dataset):
+    return dataset_postprocess.hybrid_dataset_formatter(type, dataset)
+
+@track
+def hybrid_dataset_augmentation_init(dataset):
+    return dataset_postprocess.hybrid_dataset_augmentation(dataset)
+
+@track
+def start_dataset_postprocessing(model_type, dataset, train = False):
+
+    if model_type == 'cnn':
+        x, y = dataset_postprocess._lc_dataset_formatter(dataset, train)
+    else:
+        x, y = dataset_postprocess._aux_dataset_formatter(dataset, train)
+
+    return x, y
+
+
+@track
 def model_build_evaluation(json_config = 'global_model_config.json', training_files = 'training_set', validation_files = 'val', test_files = 'test', local = False):
 
     model_config = config_util.load_config(json_config) # return config dictionary
     lc_training_dataset, aux_training_dataset = dataset_builder.dataset_builder(training_files, model_config.folder, model_config.inputs, 0.5, 500)
     lc_validation_dataset, aux_validation_dataset = dataset_builder.dataset_builder(validation_files, model_config.folder, model_config.inputs, 0.5, 500, False)
     lc_test_dataset, aux_test_dataset = dataset_builder.dataset_builder( test_files, model_config.folder, model_config.inputs, 0.5, 500, False)
-    model_initializer._test_build(local, lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
+    analytics = model_initializer._test_build(local, lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
                                                         lc_test_dataset, aux_test_dataset, model_config.mlp_net, model_config.cnn_net) #return a cosmos model using json hparams
 
-
+    return True
 if __name__=='__main__':
     model_build_evaluation('global_model_config.json', 'training_set', 'val', 'test', False)

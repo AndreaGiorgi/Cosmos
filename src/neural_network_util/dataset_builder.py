@@ -62,7 +62,7 @@ def aux_dataset_builder(tfrecords, folder, config, shuffle_buffer, training):
                         output["inputs"] = {}
                     output["inputs"][feature_name] = value
             return output
-
+ 
         filename_dataset = tf.data.Dataset.from_tensor_slices(filenames)
         dataset = filename_dataset.flat_map(tf.data.TFRecordDataset)
         #dataset =  tf.data.TFRecordDataset(filename_dataset)#? Input: List
@@ -119,6 +119,10 @@ def lc_dataset_builder(tfrecords, folder, config, reverse_prob, shuffle_buffer, 
                 if reverse_prob > reverse_condition:
                     value = tf.reverse(value, axis=[0])
                 output["inputs"] = {}
+                output["inputs"][feature_name] = value
+            else:
+                if "inputs" not in output:
+                    output["inputs"] = {}
                 output["inputs"][feature_name] = value
 
         return output

@@ -78,10 +78,11 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     # Make the output directory if it doesn't already exist.
     tf.io.gfile.makedirs(output_directory)
     tce_table = lightcurve_tce.create_input_list(tce_csv)
+    tce_table = tce_table[tce_table.Sectors != 5] #! Drop test rows
     num_transits = len(tce_table)
 
     # Shuffle TCE Table
-    np.random.seed(42429)
+    np.random.seed(1803)
     tce_table = tce_table.iloc[np.random.permutation(num_transits)] # SLower than sklearn.shuffle but it now doesn't need to reset the index
 
     ##* TCE Partions:
@@ -92,9 +93,8 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     training_TCEs = tce_table[0:train_portion]
     validation_TCEs = tce_table[train_portion:]
 
-    print(
-      "Partitioned {num} TCEs into training ({train}) and validation ({val}))"
-      .format(num = num_transits, train = len(training_TCEs), val = len(validation_TCEs)))
+    print("Partitioned {num} TCEs into training ({train}) and validation ({val}))"
+.format(num = num_transits, train = len(training_TCEs), val = len(validation_TCEs)))
 
     ##* Sharding of Datasets
 
@@ -116,7 +116,10 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
     print(list_of_shards)
 
     # Use multiprocessing. One subprocess for each shard
-    num_processes = min(num_shards, workers)
+    if num_shards < workers:
+        num_processes = workers
+    else:
+        num_processes = num_shards
     pool = multiprocessing.Pool(processes = num_processes)
     async_results = [
         pool.apply_async(lightcurve_multiprocessing.process_file_shard, args = (file_shard), kwds={'only_local': only_local})
@@ -125,5 +128,3 @@ def main_train_val_test_set(tce_csv, output_directory, shards, workers, only_loc
 
     for result in async_results:
         result.get()
-
-    #.\super_coordinator.py --tce_csv C:\Users\andre\Desktop\tces.csv --output_directory F:\Cosmos\Cosmos\TFRecords

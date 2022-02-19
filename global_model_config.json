@@ -6,6 +6,11 @@
             "data_type":0,
             "is_time_series":1
          },
+         "tic_id":{
+            "length":1,
+            "data_type":0,
+            "is_time_series":0
+         },
          "Duration":{
             "length":1,
             "data_type":0,

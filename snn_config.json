@@ -7,6 +7,5 @@
       "output_act":"softmax",
       "layers_num":5,
       "dropout_fc":0.25,
-      "units":256,
-      "units_hybrid": 512
+      "units":256
 }

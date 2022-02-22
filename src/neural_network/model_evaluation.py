@@ -49,14 +49,8 @@ def hybrid_kfold_evaluation(model, cnn_train_dataset, cnn_val_dataset, cnn_test_
     cnn_dataset = pd.concat([cnn_train_dataset, cnn_val_dataset, cnn_test_dataset], ignore_index=True)
     snn_dataset = pd.concat([snn_train_dataset, snn_val_dataset, snn_test_dataset], ignore_index=True)
 
-    print(cnn_dataset.info())
-    print(snn_dataset.info())
-
     hybrid_dataset = cnn_dataset.merge(snn_dataset, left_on='inputs/tic_id', right_on='inputs/tic_id', suffixes=('_left', '_right'))
     hybrid_x_cnn, hybrid_x_snn, hybrid_y = hybrid_dataset_augmentation_init(hybrid_dataset)
-    hybrid_x_cnn = np.stack(hybrid_x_cnn,0)
-    hybrid_x_snn = np.stack(hybrid_x_snn,0)
-    hybrid_y = np.stack(hybrid_y,0)
 
     KFold_y = []
     KFold_y_test = []
@@ -64,18 +58,13 @@ def hybrid_kfold_evaluation(model, cnn_train_dataset, cnn_val_dataset, cnn_test_
     KFold_snn_train = []
     KFold_cnn_test = []
     KFold_snn_test = []
+
     acc_per_fold = []
     loss_per_fold = []
 
     model_dir = 'F:\Cosmos\Cosmos\src\model_checkpoint\model_hybrid' + '.h5'
     model.save(model_dir)
-    kfold =  sklearn.model_selection.RepeatedKFold(n_splits = 5, n_repeats=1, random_state = 42)
-
-
-
-            #scores = fold_model.evaluate([KFold_cnn_test, hybrid_x_snn[test]], KFold_y_test, batch_size = 64, verbose=1, use_multiprocessing = True)
-            #acc_per_fold.append(scores[1] * 100)
-            #loss_per_fold.append(scores[0])
+    kfold = sklearn.model_selection.RepeatedKFold(n_splits = 5, n_repeats= 1, random_state = 42)
 
     for train, test in kfold.split(hybrid_x_cnn, hybrid_y):
         KFold_cnn_train.append(hybrid_x_cnn[train])
@@ -83,22 +72,21 @@ def hybrid_kfold_evaluation(model, cnn_train_dataset, cnn_val_dataset, cnn_test_
         KFold_cnn_test.append(hybrid_x_cnn[test])
         KFold_y_test.append(hybrid_y[test])
 
-
-    for train, _ in kfold.split(hybrid_x_snn, hybrid_y):
-        KFold_snn_train.append(hybrid_x_cnn[train])
-        KFold_snn_test.append(hybrid_x_cnn[test])
+    for train, test in kfold.split(hybrid_x_snn, hybrid_y):
+        KFold_snn_train.append(hybrid_x_snn[train])
+        KFold_snn_test.append(hybrid_x_snn[test])
 
     for i in range(len(KFold_cnn_train)):
         fold_model = tf.keras.models.load_model(model_dir)
-        _ = fold_model.fit([KFold_cnn_train[i], KFold_snn_train[i]], KFold_y[i], batch_size=config.batch_size,epochs=25,use_multiprocessing=True)
+        _ = fold_model.fit([KFold_cnn_train[i], KFold_snn_train[i]], KFold_y[i], batch_size=config.batch_size, epochs=25, use_multiprocessing=True)
 
-        scores = fold_model.evaluate([KFold_cnn_test[i], KFold_snn_test[i]], KFold_y_test[i], batch_size = 64, verbose=1, use_multiprocessing = True)
+        scores = fold_model.evaluate([KFold_cnn_test[i], KFold_snn_test[i]], KFold_y_test[i], batch_size = config.batch_size, verbose= 1, use_multiprocessing = True)
         acc_per_fold.append(scores[1] * 100)
         loss_per_fold.append(scores[0])
 
     print('------------------------------------------------------------------------')
     print('Average scores for all folds:')
-    print(f'> Accuracy: {np.mean(acc_per_fold)} (+- {sem(acc_per_fold)})')
+    print(f'> Accuracy: {np.mean(acc_per_fold)} (+- {np.std(acc_per_fold)})')
     print(f'> Loss: {np.mean(loss_per_fold)}')
     print('------------------------------------------------------------------------')
 

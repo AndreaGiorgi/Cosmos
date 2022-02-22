@@ -10,7 +10,7 @@ from neural_network.model_evaluation import combined_model_evaluation, hybrid_kf
 def _snn_builder(config):
 
     initializer = tf.keras.initializers.LecunNormal()
-    snn_inputs = Input(shape=(int(config.input_dim + 1),), name = 'snn_inputs')
+    snn_inputs = Input(shape=(int(config.input_dim),), name = 'snn_inputs')
     x = BatchNormalization(momentum=0.95,epsilon=0.005, beta_initializer=RandomNormal(mean=0.0, stddev=0.05),gamma_initializer = Constant(value=0.9))(snn_inputs)
     for i in range(0, config.layers_num):
         x = Dense(config.units, activation = config.activation, name = "snn_dense_" + str(i), kernel_initializer=initializer)(x)
@@ -55,10 +55,10 @@ def _dcnn_builder(config):
 def _combined_snn_builder(snn, dcnn_flatten, snn_inputs, dcnn_inputs, config):
 
     initializer = tf.keras.initializers.LecunNormal()
-    merged_model = concatenate([snn, dcnn_flatten])
+    merged_model = concatenate([dcnn_flatten, snn])
     x = Dropout(config.dropout_fc)(merged_model)
     x = BatchNormalization(momentum=0.95,epsilon=0.005,beta_initializer=RandomNormal(mean=0.0, stddev=0.05),gamma_initializer=Constant(value=0.9))(snn_inputs)
-    for _ in range(5):
+    for _ in range(3):
         x = Dense(config.units_hybrid, activation = config.activation, kernel_initializer=initializer)(x)
     outputs = Dense(int(config.output_dim), activation=config.output_act, name="Output")(x)
     model = Model(inputs=[dcnn_inputs, snn_inputs], outputs=outputs)

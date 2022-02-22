@@ -14,13 +14,17 @@ import pandas as pd
 
 def hybrid_dataset_augmentation(df):
 
-    y = df['targets_left']
-    x_cnn = df['inputs/global_view'].to_numpy()
-    x_snn = df.drop(labels=['inputs/global_view','targets_left', 'targets_right'], axis=1).to_numpy()
+    hybrid_y = df['targets_left']
+    hybrid_x_cnn = df['inputs/global_view']
+    hybrid_x_snn = df.drop(labels=['inputs/tic_id', 'inputs/global_view','targets_left', 'targets_right'], axis=1)
 
-    y = tf.keras.utils.to_categorical(y)
+    hybrid_x_cnn = np.array(list(x for x in hybrid_x_cnn))
+    hybrid_y = hybrid_y.to_numpy()
+    hybrid_x_snn = hybrid_x_snn.to_numpy()
 
-    return x_cnn, x_snn, y
+    hybrid_y = tf.keras.utils.to_categorical(hybrid_y)
+
+    return hybrid_x_cnn, hybrid_x_snn, hybrid_y
 
 def hybrid_dataset_formatter(type, dataset):
 

@@ -4,17 +4,8 @@ import seaborn as sns
 import numpy as np
 import sklearn
 import datetime
-from matplotlib import pyplot
 from coordinator.neural_network_coordinator import hybrid_dataset_augmentation_init, start_dataset_postprocessing, hybrid_dataset_formatter_init
 
-
-def results_visualization(acc_per_fold):
-
-    acc_df = pd.DataFrame(acc_per_fold, columns=[str(i) for i in range(1,11)])
-    sns.set_theme(style="whitegrid")
-    ax = sns.boxplot(data=acc_df)
-    ax.set(ylabel='accuracy')
-    pyplot.show()
 
 def hybrid_kfold_evaluation(model, cnn_train_dataset, cnn_val_dataset, cnn_test_dataset, snn_train_dataset, snn_val_dataset, snn_test_dataset, config):
 
@@ -39,11 +30,12 @@ def hybrid_kfold_evaluation(model, cnn_train_dataset, cnn_val_dataset, cnn_test_
     KFold_snn_test = []
 
     acc_per_fold = []
+    auc_per_fold = []
     loss_per_fold = []
 
     model_dir = 'F:\Cosmos\Cosmos\src\model_checkpoint\model_hybrid' + '.h5'
     model.save(model_dir)
-    kfold =  sklearn.model_selection.RepeatedKFold(n_splits = 5, n_repeats=2)
+    kfold =  sklearn.model_selection.RepeatedKFold(n_splits = 5, n_repeats=1)
 
     for train, test in kfold.split(hybrid_x_cnn, hybrid_y):
         KFold_cnn_train.append(hybrid_x_cnn[train])
@@ -57,14 +49,15 @@ def hybrid_kfold_evaluation(model, cnn_train_dataset, cnn_val_dataset, cnn_test_
         fold_model = tf.keras.models.load_model(model_dir)
         _ = fold_model.fit([KFold_cnn_train[i], KFold_snn_train[i]], KFold_y[i], batch_size=config.batch_size, epochs=25, use_multiprocessing=True)
 
-        y_pred = fold_model.predict([KFold_cnn_test[i], KFold_snn_test[i]], batch_size = config.batch_size)
         scores = fold_model.evaluate([KFold_cnn_test[i], KFold_snn_test[i]], KFold_y_test[i], batch_size = config.batch_size, verbose= 1, use_multiprocessing = True)
-        acc_per_fold.append(scores[1] * 100)
+        auc_per_fold.append(scores[1])
+        acc_per_fold.append(scores[2] * 100)
         loss_per_fold.append(scores[0])
 
     print('------------------------------------------------------------------------')
     print('Average scores for all folds:')
     print(f'> Accuracy: {np.mean(acc_per_fold)} (+- {np.std(acc_per_fold)})')
+    print(f'> AUC: {np.mean(auc_per_fold)} (+- {np.std(auc_per_fold)})')
     print(f'> Loss: {np.mean(loss_per_fold)} (+- {np.std(loss_per_fold)})')
     print('------------------------------------------------------------------------')
 
@@ -82,6 +75,7 @@ def model_kfold_evaluation(model_type, model, dataset, val_dataset, test_dataset
     model.save(model_dir)
 
     acc_per_fold = []
+    auc_per_fold = []
     loss_per_fold = []
     kfold =  sklearn.model_selection.RepeatedKFold(n_splits = 5, n_repeats= 2)
     for train, test in kfold.split(kf_inputs, kf_targets):
@@ -91,13 +85,14 @@ def model_kfold_evaluation(model_type, model, dataset, val_dataset, test_dataset
               epochs=25,
               use_multiprocessing=True)
 
-        y_pred = fold_model.predict(kf_inputs[test], batch_size = config.batch_size)
         scores = fold_model.evaluate(kf_inputs[test], kf_targets[test], batch_size = 64, verbose=1, use_multiprocessing = True)
-        acc_per_fold.append(scores[1] * 100)
+        auc_per_fold.append(scores[1])
+        acc_per_fold.append(scores[2] * 100)
         loss_per_fold.append(scores[0])
 
     print('------------------------------------------------------------------------')
     print('Average scores for all folds:')
     print(f'> Accuracy: {np.mean(acc_per_fold)} (+- {np.std(acc_per_fold)})')
+    print(f'> AUC: {np.mean(auc_per_fold)} (+- {np.std(auc_per_fold)})')
     print(f'> Loss: {np.mean(loss_per_fold)} (+- {np.std(loss_per_fold)})')
     print('------------------------------------------------------------------------')

@@ -2,7 +2,7 @@
    "input_dim":402,
    "output_dim":2,
    "batch_size":64,
-   "learning_rate": 1e-4,
+   "learning_rate": 2e-4,
    "activation":"selu",
    "output_act":"softmax",
    "fc_units":256,

@@ -54,15 +54,14 @@ def _lc_dataset_formatter(dataset, train = True):
     data = df['inputs/global_view'].to_numpy()
     x = np.array(list(x for x in data))
     if train:
-        over = ADASYN(n_jobs=-1)
+        over = ADASYN()
         under = RandomUnderSampler()
         steps = [('o', over), ('u', under)]
         pipeline = Pipeline(steps=steps)
         x, y = pipeline.fit_resample(x, y)
     else:
-        over = ADASYN(n_neighbors = 2, n_jobs=-1)
-        under = RandomUnderSampler()
-        steps = [('o', over), ('u', under)]
+        over = ADASYN(n_neighbors = 2)
+        steps = [('o', over)]
         pipeline = Pipeline(steps=steps)
         x, y = pipeline.fit_resample(x, y)
 
@@ -85,15 +84,14 @@ def _aux_dataset_formatter(dataset, train = True):
     x = df
 
     if train:
-        over = ADASYN(n_jobs=-1)
+        over = ADASYN()
         under = RandomUnderSampler()
         steps = [('o', over), ('u', under)]
         pipeline = Pipeline(steps=steps)
         x, y = pipeline.fit_resample(x, y)
     else:
-        over = ADASYN(n_neighbors = 2, n_jobs=-1)
-        under = RandomUnderSampler()
-        steps = [('o', over), ('u', under)]
+        over = ADASYN(n_neighbors = 2)
+        steps = [('o', over)]
         pipeline = Pipeline(steps=steps)
         x, y = pipeline.fit_resample(x, y)
 

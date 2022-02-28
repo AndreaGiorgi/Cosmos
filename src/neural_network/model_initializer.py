@@ -1,4 +1,3 @@
-
 import tensorflow as tf
 from keras.utils.vis_utils import plot_model
 from keras import Model, Input
@@ -6,6 +5,7 @@ from keras.layers import Dense, BatchNormalization, Conv1D, MaxPooling1D, Averag
 from keras.initializers import RandomNormal, Constant
 from keras.layers.merge import concatenate
 from neural_network.model_evaluation import hybrid_kfold_evaluation, model_kfold_evaluation
+
 
 def _snn_builder(config):
 
@@ -19,7 +19,7 @@ def _snn_builder(config):
     outputs = Dense(int(config.output_dim), activation=config.output_act, name="predictions")(x)
 
     model = Model(inputs=snn_inputs, outputs=outputs)
-    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adamax(learning_rate=config.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-07), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate = config.learning_rate, epsilon = 1e-07), metrics=[tf.keras.metrics.AUC(curve = 'PR'), 'accuracy'])
     plot_model(model, show_shapes=True, to_file='F:\Cosmos\Cosmos\src\model_checkpoint\cosmos_snn.png')
 
     return model, snn_inputs, x
@@ -46,7 +46,7 @@ def _dcnn_builder(config):
     outputs = Dense(int(config.output_dim), activation=config.output_act, name="predictions")(x)
 
     model = Model(inputs=cnn_inputs, outputs=outputs)
-    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4,beta_1=0.9,beta_2=0.999,epsilon=1e-07, amsgrad=True), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate = config.learning_rate, epsilon = 1e-07, amsgrad=True),  metrics=[tf.keras.metrics.AUC(curve = 'PR'), 'accuracy'])
     plot_model(model, show_shapes=True, to_file='F:\Cosmos\Cosmos\src\model_checkpoint\cosmos_cnn.png')
 
     return model, cnn_inputs, x_flatten
@@ -62,7 +62,7 @@ def _hybrid_builder(snn, dcnn_flatten, snn_inputs, dcnn_inputs, config):
         x = Dense(config.units, activation = config.activation, kernel_initializer=initializer)(x)
     outputs = Dense(int(config.output_dim), activation=config.output_act, name="Output")(x)
     model = Model(inputs=[dcnn_inputs, snn_inputs], outputs=outputs)
-    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.001,initial_accumulator_value=0.1,epsilon=1e-07), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.SGD(momentum = 0.50, nesterov = True), metrics=[tf.keras.metrics.AUC(curve = 'PR'), 'accuracy'])
     plot_model(model, show_shapes=True, to_file='F:\Cosmos\Cosmos\src\model_checkpoint\cosmos_hybrid.png')
 
     return model
@@ -128,9 +128,9 @@ def _model_builder(config_snn, config_cnn, config_hybrid):
 def _test_build(local, lc_train_dataset, aux_train_dataset, lc_valid_dataset, aux_valid_dataset, lc_test_dataset, aux_test_dataset, config_snn, config_cnn, config_hybrid):
     model_snn, model_cnn, model_hybrid = _model_builder(config_snn, config_cnn, config_hybrid)
 
-    model_kfold_evaluation('snn', model_snn, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_snn)
+    #model_kfold_evaluation('snn', model_snn, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_snn)
     #model_kfold_evaluation('cnn', model_cnn, lc_train_dataset, lc_valid_dataset, lc_test_dataset, config_cnn)
-    #hybrid_kfold_evaluation(model_hybrid, lc_train_dataset, lc_valid_dataset, lc_test_dataset, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_hybrid)
+    hybrid_kfold_evaluation(model_hybrid, lc_train_dataset, lc_valid_dataset, lc_test_dataset, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_hybrid)
 
     return True
 

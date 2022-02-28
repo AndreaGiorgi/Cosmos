@@ -41,5 +41,10 @@ def load_lightcurve_data(filename, flux_type = 'KSPSAP_FLUX'):
 
     return time, flux
 
-if __name__ == '__main__':
+
+def _test():
     print(load_lightcurve_data('ingested_data\\sector_1\\hlsp_qlp_tess_ffi_s0001-0000000114990015_tess_v01_llc.fits'))
+
+
+if __name__ == '__main__':
+    _test()

@@ -9,6 +9,7 @@ import time
 from neural_network_util import config_util, dataset_builder, dataset_postprocess
 from neural_network import model_initializer
 
+
 def get_process_memory():
     process = psutil.Process(os.getpid())
     return process.memory_info().rss
@@ -33,9 +34,11 @@ def track(func):
 def hybrid_dataset_formatter_init(type, dataset):
     return dataset_postprocess.hybrid_dataset_formatter(type, dataset)
 
+
 @track
 def hybrid_dataset_augmentation_init(dataset):
     return dataset_postprocess.hybrid_dataset_augmentation(dataset)
+
 
 @track
 def start_dataset_postprocessing(model_type, dataset, train = False):

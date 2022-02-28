@@ -7,6 +7,7 @@ class EmptyLightCurveError(Exception):
     """Indicates light curve with no points in chosen time range."""
     pass
 
+
 def generate_view(time, flux, num_bins, bin_width, t_min, t_max, normalize=True):
   """Generates a view of a phase-folded light curve using a median filter.
 

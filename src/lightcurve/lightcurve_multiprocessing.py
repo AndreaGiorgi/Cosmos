@@ -8,6 +8,7 @@ class EmptyLightCurveError(Exception):
 class SparseLightCurveError(Exception):
     """Indicates light curve with too few points in chosen time range."""
 
+
 def _process_tce(tce, only_local):
     """Processes the light curve for a Kepler TCE and returns an Example proto.
 

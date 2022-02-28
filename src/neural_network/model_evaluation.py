@@ -35,7 +35,7 @@ def hybrid_kfold_evaluation(model, cnn_train_dataset, cnn_val_dataset, cnn_test_
 
     model_dir = 'F:\Cosmos\Cosmos\src\model_checkpoint\model_hybrid' + '.h5'
     model.save(model_dir)
-    kfold =  sklearn.model_selection.RepeatedKFold(n_splits = 5, n_repeats= 2)
+    kfold =  sklearn.model_selection.RepeatedKFold(n_splits = 5, n_repeats= 2, random_state = 42) #? What is the meaning of life?
 
     for train, test in kfold.split(hybrid_x_cnn, hybrid_y):
         KFold_cnn_train.append(hybrid_x_cnn[train])
@@ -77,7 +77,7 @@ def model_kfold_evaluation(model_type, model, dataset, val_dataset, test_dataset
     acc_per_fold = []
     auc_per_fold = []
     loss_per_fold = []
-    kfold =  sklearn.model_selection.RepeatedKFold(n_splits = 5, n_repeats = 2)
+    kfold =  sklearn.model_selection.RepeatedKFold(n_splits = 5, n_repeats = 2, random_state = 42)
     for train, test in kfold.split(kf_inputs, kf_targets):
         fold_model = tf.keras.models.load_model(model_dir)
         _ = fold_model.fit(kf_inputs[train], kf_targets[train],

@@ -10,9 +10,11 @@ sys.path.append(parentdir)
 import psutil, time
 from coordinator import etl_coordinator, lightcurves_processing_coordinator, coordinator_config, neural_network_coordinator
 
+
 def get_process_memory():
     process = psutil.Process(os.getpid())
     return process.memory_info().rss
+
 
 def track(func):
     def wrapper(*args, **kwargs):
@@ -55,12 +57,12 @@ def test_data_pipeline(config):
     return True
 
 
-def main():
+def init_super_coordinator():
     config = coordinator_config.load_config('F:\\Cosmos\\Cosmos\\ETL_config.json')
-    #test_data_pipeline(config.etl)
-    #training_data_pipeline(config.etl)
+    test_data_pipeline(config.etl)
+    training_data_pipeline(config.etl)
     neural_network_coordinator.model_build_evaluation()
 
 
 if __name__ == '__main__':
-    main()
+    init_super_coordinator()

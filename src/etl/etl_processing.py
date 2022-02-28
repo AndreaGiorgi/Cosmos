@@ -69,4 +69,3 @@ def process_lightcurve(tce, only_local_flag):
                 _set_bytes_feature(example, col_name, [value])
 
     return example
-

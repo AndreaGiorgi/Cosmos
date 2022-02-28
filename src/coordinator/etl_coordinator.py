@@ -5,6 +5,7 @@ sys.path.append(parentdir)
 
 from etl import etl_ingestion, etl_loading, etl_processing
 
+
 def get_process_memory():
     process = psutil.Process(os.getpid())
     return process.memory_info().rss

@@ -12,6 +12,7 @@ def preprocess_tce(tce_table):
     print(tce_table.info())
     return tce_table
 
+
 def create_input_list(tce_csv):
     """Generate pandas dataframe of TCEs to be made into file shards.
 

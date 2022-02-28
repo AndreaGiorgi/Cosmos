@@ -1,6 +1,7 @@
 import numpy as np
 from six import moves
 
+
 class SparseLightCurveError(Exception):
     """Indicates light curve with too few points in chosen time range."""
     pass

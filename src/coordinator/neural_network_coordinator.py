@@ -49,7 +49,7 @@ def start_dataset_postprocessing(model_type, dataset, train = False):
 
 
 @track
-def model_build_evaluation(view_config = 'global_model_config.json', cnn_config = 'cnn_config.json', snn_config = 'snn_config.json', hybrid_config = 'hybrid_config.json', training_files = 'training_set', validation_files = 'val', test_files = 'test'):
+def model_build_evaluation(view_config = 'global_config.json', cnn_config = 'cnn_config.json', snn_config = 'snn_config.json', hybrid_config = 'hybrid_config.json', training_files = 'training_set', validation_files = 'val', test_files = 'test'):
 
     view_config = config_util.load_config(view_config) # return config dictionary
     snn_config = config_util.load_config(snn_config) # return config dictionary

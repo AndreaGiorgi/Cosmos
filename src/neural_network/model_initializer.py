@@ -125,15 +125,11 @@ def _model_builder(config_snn, config_cnn, config_hybrid):
     return model_snn, model_cnn, model_hybrid
 
 
-def _test_build(local, lc_train_dataset, aux_train_dataset, lc_valid_dataset, aux_valid_dataset, lc_test_dataset, aux_test_dataset, config_snn, config_cnn, config_hybrid):
+def _test_build(lc_train_dataset, aux_train_dataset, lc_valid_dataset, aux_valid_dataset, lc_test_dataset, aux_test_dataset, config_snn, config_cnn, config_hybrid):
     model_snn, model_cnn, model_hybrid = _model_builder(config_snn, config_cnn, config_hybrid)
 
-    #model_kfold_evaluation('snn', model_snn, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_snn)
-    #model_kfold_evaluation('cnn', model_cnn, lc_train_dataset, lc_valid_dataset, lc_test_dataset, config_cnn)
+    model_kfold_evaluation('snn', model_snn, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_snn)
+    model_kfold_evaluation('cnn', model_cnn, lc_train_dataset, lc_valid_dataset, lc_test_dataset, config_cnn)
     hybrid_kfold_evaluation(model_hybrid, lc_train_dataset, lc_valid_dataset, lc_test_dataset, aux_train_dataset, aux_valid_dataset, aux_test_dataset, config_hybrid)
 
     return True
-
-
-if __name__ == '__main__':
-    _test_build()

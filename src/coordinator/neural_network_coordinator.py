@@ -49,7 +49,7 @@ def start_dataset_postprocessing(model_type, dataset, train = False):
 
 
 @track
-def model_build_evaluation(view_config = 'global_model_config.json', cnn_config = 'cnn_config.json', snn_config = 'snn_config.json', hybrid_config = 'hybrid_config.json', training_files = 'training_set', validation_files = 'val', test_files = 'test', local = False):
+def model_build_evaluation(view_config = 'global_model_config.json', cnn_config = 'cnn_config.json', snn_config = 'snn_config.json', hybrid_config = 'hybrid_config.json', training_files = 'training_set', validation_files = 'val', test_files = 'test'):
 
     view_config = config_util.load_config(view_config) # return config dictionary
     snn_config = config_util.load_config(snn_config) # return config dictionary
@@ -58,11 +58,11 @@ def model_build_evaluation(view_config = 'global_model_config.json', cnn_config 
     lc_training_dataset, aux_training_dataset = dataset_builder.dataset_builder(training_files, view_config.folder, view_config.inputs, 0.5, 500)
     lc_validation_dataset, aux_validation_dataset = dataset_builder.dataset_builder(validation_files, view_config.folder, view_config.inputs, 0.5, 500, False)
     lc_test_dataset, aux_test_dataset = dataset_builder.dataset_builder(test_files, view_config.folder, view_config.inputs, 0.5, 500, False)
-    analytics = model_initializer._test_build(local, lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
+    analytics = model_initializer._test_build(lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
                                                         lc_test_dataset, aux_test_dataset, snn_config, cnn_config, hybrid_config) #return a cosmos model using json hparams
 
     return True
 
 
 if __name__=='__main__':
-    model_build_evaluation('global_model_config.json', 'cnn_config.json', 'snn_config.json', 'hybrid_config.json', 'training_set', 'val', 'test', False)
+    model_build_evaluation('global_model_config.json', 'cnn_config.json', 'snn_config.json', 'hybrid_config.json', 'training_set', 'val', 'test')

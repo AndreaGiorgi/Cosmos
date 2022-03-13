@@ -79,6 +79,8 @@ def _aux_dataset_formatter(dataset, train = True):
     df['inputs/Transit_Depth'] = df['inputs/Transit_Depth'].str.get(0)
     df['targets'] = df['targets'].str.get(0)
 
+    print(df['targets'].value_counts())
+
     y = df['targets']
     df = df.drop(labels=['inputs/tic_id', 'targets'], axis=1)
     x = df

@@ -61,11 +61,11 @@ def model_build_evaluation(view_config = 'global_config.json', cnn_config = 'cnn
     lc_training_dataset, aux_training_dataset = dataset_builder.dataset_builder(training_files, view_config.folder, view_config.inputs, 0.5, 500)
     lc_validation_dataset, aux_validation_dataset = dataset_builder.dataset_builder(validation_files, view_config.folder, view_config.inputs, 0.5, 500, False)
     lc_test_dataset, aux_test_dataset = dataset_builder.dataset_builder(test_files, view_config.folder, view_config.inputs, 0.5, 500, False)
-    analytics = model_initializer._test_build(lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
+    model_initializer._test_build(lc_training_dataset, aux_training_dataset, lc_validation_dataset, aux_validation_dataset,
                                                         lc_test_dataset, aux_test_dataset, snn_config, cnn_config, hybrid_config) #return a cosmos model using json hparams
 
     return True
 
 
 if __name__=='__main__':
-    model_build_evaluation('global_model_config.json', 'cnn_config.json', 'snn_config.json', 'hybrid_config.json', 'training_set', 'val', 'test')
+    model_build_evaluation('global_config.json', 'cnn_config.json', 'snn_config.json', 'hybrid_config.json', 'training_set', 'val', 'test')
